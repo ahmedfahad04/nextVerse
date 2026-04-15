@@ -286,7 +286,7 @@ export default function Home() {
             </svg>
           </div> */}
           <div>
-            <h1 className="text-2xl md:text-4xl font-black tracking-tighter text-emerald-950 uppercase leading-none selection:bg-islam-gold selection:text-white">
+            <h1 className="text-2xl md:text-4xl font-black tracking-tighter text-emerald-950 leading-none selection:bg-islam-gold selection:text-white">
               next<span className="text-emerald-700">Verse</span>
             </h1>
             <p className="text-emerald-900/40 text-[9px] md:text-xs font-bold tracking-[0.3em] uppercase mt-1">
