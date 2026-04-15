@@ -59,7 +59,6 @@ export default function Home() {
     if (!surah) return;
 
     const randomAyah = Math.floor(Math.random() * surah.numberOfAyahs) + 1;
-
     const newEntry = { surah: randomSurah, ayah: randomAyah };
     const newHistory = [...history.slice(0, historyIndex + 1), newEntry];
     setHistory(newHistory);
@@ -141,210 +140,218 @@ export default function Home() {
   const bengaliTranslation = ayahState.translations.find(
     (t) => t.resource_id === 161
   );
-  const englishTranslation = ayahState.translations.find(
-    (t) => t.resource_id === 20
-  );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col items-center px-4 py-8">
-      {/* Header */}
-      <header className="w-full max-w-3xl mb-8">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-emerald-400">nextVerse</h1>
-          <button
-            onClick={getRandomAyah}
-            disabled={surahs.length === 0 || ayahState.loading}
-            className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-bold text-lg rounded-xl transition-colors shadow-lg shadow-emerald-600/20"
-          >
-            🎲 Random Ayah
-          </button>
+    <div className="min-h-screen relative flex flex-col items-center px-4 py-8 overflow-hidden">
+      <div className="islamic-pattern" />
+      
+      {/* Settings Modal */}
+      {isSettingsOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-3xl w-full max-w-sm p-8 shadow-2xl border border-emerald-50">
+            <h2 className="text-2xl font-bold text-emerald-900 mb-6 flex items-center gap-2">
+              ⚙️ Settings
+            </h2>
+            
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <span className="text-emerald-800 font-medium">Show Bengali Translation</span>
+                <button 
+                  onClick={() => setShowBengali(!showBengali)}
+                  className={`w-12 h-6 rounded-full transition-colors relative ${showBengali ? 'bg-emerald-500' : 'bg-slate-300'}`}
+                >
+                  <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${showBengali ? 'translate-x-6' : ''}`} />
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-emerald-800 font-medium text-sm">Default Show Ayah Details</span>
+                <button 
+                  onClick={() => setShowDetails(!showDetails)}
+                  className={`w-12 h-6 rounded-full transition-colors relative ${showDetails ? 'bg-emerald-500' : 'bg-slate-300'}`}
+                >
+                  <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${showDetails ? 'translate-x-6' : ''}`} />
+                </button>
+              </div>
+
+              <div className="pt-4 border-t border-emerald-50">
+                <label className="flex items-center gap-3 cursor-pointer mb-3">
+                  <input
+                    type="checkbox"
+                    checked={rangeEnabled}
+                    onChange={(e) => setRangeEnabled(e.target.checked)}
+                    className="w-4 h-4 rounded border-emerald-300 text-emerald-600 focus:ring-emerald-500"
+                  />
+                  <span className="text-emerald-800 font-medium">Restrict Surah Range</span>
+                </label>
+                {rangeEnabled && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs text-emerald-600 font-bold">Start Surah</span>
+                      <input
+                        type="number"
+                        min={1}
+                        max={114}
+                        value={rangeStart}
+                        onChange={(e) => setRangeStart(Math.min(Math.max(1, parseInt(e.target.value) || 1), rangeEnd))}
+                        className="w-full px-3 py-2 bg-emerald-50/50 border border-emerald-100 rounded-xl text-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs text-emerald-600 font-bold">End Surah</span>
+                      <input
+                        type="number"
+                        min={1}
+                        max={114}
+                        value={rangeEnd}
+                        onChange={(e) => setRangeEnd(Math.max(Math.min(114, parseInt(e.target.value) || 114), rangeStart))}
+                        className="w-full px-3 py-2 bg-emerald-50/50 border border-emerald-100 rounded-xl text-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <button
+              onClick={() => setIsSettingsOpen(false)}
+              className="w-full mt-10 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl transition-all shadow-lg"
+            >
+              Done
+            </button>
+          </div>
         </div>
-        <p className="text-slate-400 mt-2 text-sm">
-          Your Quran memorization companion
-        </p>
+      )}
+
+      {/* Header */}
+      <header className="w-full max-w-4xl flex items-center justify-between mb-12">
+        <div>
+          <h1 className="text-4xl font-extrabold bg-gradient-to-tr from-emerald-800 to-emerald-600 bg-clip-text text-transparent italic">
+            nextVerse
+          </h1>
+          <p className="text-emerald-900/60 text-sm font-medium tracking-wide">
+            Divine Reflection & Practicing
+          </p>
+        </div>
+        <button 
+          onClick={() => setIsSettingsOpen(true)}
+          className="p-3 bg-white/50 backdrop-blur-sm border border-emerald-100 rounded-2xl text-emerald-700 hover:bg-white/80 transition-all shadow-sm"
+        >
+          <span className="text-xl">⚙️</span>
+        </button>
       </header>
 
-      {/* Range Filter */}
-      <div className="w-full max-w-3xl mb-6">
-        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
-          <div className="flex items-center gap-4 flex-wrap">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={rangeEnabled}
-                onChange={(e) => setRangeEnabled(e.target.checked)}
-                className="w-4 h-4 rounded border-slate-600 bg-slate-700 text-emerald-500 focus:ring-emerald-500"
-              />
-              <span className="text-sm text-slate-300">Limit Surah Range</span>
-            </label>
-            {rangeEnabled && (
-              <div className="flex items-center gap-2 flex-wrap">
-                <div className="flex items-center gap-1">
-                  <span className="text-xs text-slate-400">From:</span>
-                  <input
-                    type="number"
-                    min={1}
-                    max={114}
-                    value={rangeStart}
-                    onChange={(e) =>
-                      setRangeStart(
-                        Math.min(
-                          Math.max(1, parseInt(e.target.value) || 1),
-                          rangeEnd
-                        )
-                      )
-                    }
-                    className="w-16 px-2 py-1 bg-slate-700 border border-slate-600 rounded text-sm text-white focus:outline-none focus:border-emerald-500"
-                  />
-                </div>
-                <div className="flex items-center gap-1">
-                  <span className="text-xs text-slate-400">To:</span>
-                  <input
-                    type="number"
-                    min={1}
-                    max={114}
-                    value={rangeEnd}
-                    onChange={(e) =>
-                      setRangeEnd(
-                        Math.max(
-                          Math.min(114, parseInt(e.target.value) || 114),
-                          rangeStart
-                        )
-                      )
-                    }
-                    className="w-16 px-2 py-1 bg-slate-700 border border-slate-600 rounded text-sm text-white focus:outline-none focus:border-emerald-500"
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Ayah Display */}
-      <main className="w-full max-w-3xl flex-1">
+      {/* Main Content */}
+      <main className="w-full max-w-4xl flex-1 flex flex-col items-center justify-center mb-40">
         {ayahState.loading ? (
-          <div className="bg-slate-800 border border-slate-700 rounded-2xl p-8 text-center">
-            <div className="animate-pulse text-slate-400">Loading...</div>
+          <div className="flex flex-col items-center animate-pulse">
+            <div className="text-5xl mb-4 text-emerald-400">✨</div>
+            <div className="text-emerald-800/40 font-bold text-xl uppercase tracking-widest">Loading Ayah...</div>
           </div>
         ) : ayahState.arabic ? (
-          <div className="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden shadow-xl">
-            {/* Surah Info */}
-            <div className="bg-slate-700/50 px-6 py-3 flex items-center justify-between border-b border-slate-700">
-              <div>
-                <span className="text-emerald-400 font-semibold">
-                  {currentSurah?.englishName} ({currentSurah?.name})
-                </span>
-                <span className="text-slate-400 text-sm ml-3">
-                  Surah {ayahState.surah}:{ayahState.ayah}
-                </span>
+          <div className="w-full relative group">
+            <div className="bg-white/60 backdrop-blur-xl border border-white/40 rounded-[2.5rem] p-10 md:p-16 shadow-[0_20px_50px_rgba(6,78,59,0.05)] text-center relative overflow-hidden transition-all duration-700 group-hover:shadow-[0_20px_70px_rgba(6,78,59,0.1)]">
+              
+              <div className="absolute top-8 left-1/2 -translate-x-1/2 flex items-center gap-3">
+                <button 
+                  onClick={() => setTempShowDetails(!tempShowDetails)}
+                  className="px-3 py-1 bg-emerald-50 border border-emerald-100 rounded-full text-[10px] font-bold text-emerald-700 uppercase tracking-widest hover:bg-emerald-100 transition-colors"
+                >
+                  {tempShowDetails ? "🙈 Hide Details" : "👁️ Show Details"}
+                </button>
               </div>
-              <span className="text-xs text-slate-500 bg-slate-700 px-2 py-1 rounded">
-                {currentSurah?.revelationType}
-              </span>
-            </div>
 
-            {/* Arabic Text */}
-            <div className="px-6 py-8 text-center border-b border-slate-700/50">
-              <p className="arabic-text text-3xl text-white leading-loose">
-                {ayahState.arabic.text}
-              </p>
-            </div>
-
-            {/* Translations */}
-            <div className="px-6 py-4 space-y-3">
-              {bengaliTranslation && (
-                <div className="bg-slate-700/30 rounded-lg p-4">
-                  <span className="text-xs font-semibold text-indigo-400 uppercase tracking-wide">
-                    Bengali
+              {tempShowDetails && (
+                <div className="mb-10 animate-fade-in">
+                  <span className="text-xs font-bold text-amber-600 bg-amber-50 px-4 py-1.5 rounded-full uppercase tracking-[0.2em] mb-3 inline-block">
+                    {currentSurah?.englishName} • {currentSurah?.revelationType}
                   </span>
-                  <p className="text-slate-200 mt-1 leading-relaxed">
-                    {bengaliTranslation.text}
+                  <p className="text-emerald-800/40 text-sm font-medium">
+                    Surah {ayahState.surah} : Ayah {ayahState.ayah}
                   </p>
                 </div>
               )}
-              {englishTranslation && (
-                <div className="bg-slate-700/30 rounded-lg p-4">
-                  <span className="text-xs font-semibold text-indigo-400 uppercase tracking-wide">
-                    English
-                  </span>
-                  <p className="text-slate-200 mt-1 leading-relaxed">
-                    {englishTranslation.text}
+
+              <div className="mb-12">
+                <p className="arabic-text text-4xl md:text-6xl text-emerald-950 leading-[1.8] md:leading-[1.8]">
+                  {ayahState.arabic.text}
+                </p>
+              </div>
+
+              {showBengali && bengaliTranslation && (
+                <div className="pt-10 border-t border-emerald-100/50">
+                  <p className="bengali-text text-xl md:text-2xl text-emerald-900 leading-relaxed font-medium">
+                    {bengaliTranslation.text}
                   </p>
                 </div>
               )}
             </div>
           </div>
         ) : (
-          <div className="bg-slate-800 border border-slate-700 rounded-2xl p-12 text-center">
-            <p className="text-slate-400 text-lg">
-              Click the{" "}
-              <span className="text-emerald-400 font-semibold">Random Ayah</span>{" "}
-              button to start
+          <div className="text-center group">
+            <div className="text-8xl mb-8 animate-float opacity-80 cursor-default select-none">🌙</div>
+            <p className="text-emerald-900 text-2xl font-semibold opacity-60 group-hover:opacity-100 transition-opacity">
+              Tap the button to reveal a verse
             </p>
           </div>
         )}
-
-        {/* Navigation */}
-        <div className="flex items-center justify-between mt-6">
-          <button
-            onClick={() => navigateAyah("prev")}
-            disabled={!ayahState.arabic || ayahState.loading}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:bg-slate-800 disabled:text-slate-600 text-slate-300 rounded-lg transition-colors"
-          >
-            ← Previous Ayah
-          </button>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={goBack}
-              disabled={historyIndex <= 0}
-              className="px-3 py-2 bg-slate-700 hover:bg-slate-600 disabled:bg-slate-800 disabled:text-slate-600 text-slate-300 rounded-lg transition-colors text-sm"
-            >
-              ↩
-            </button>
-            <button
-              onClick={goForward}
-              disabled={historyIndex >= history.length - 1}
-              className="px-3 py-2 bg-slate-700 hover:bg-slate-600 disabled:bg-slate-800 disabled:text-slate-600 text-slate-300 rounded-lg transition-colors text-sm"
-            >
-              ↪
-            </button>
-          </div>
-
-          <button
-            onClick={() => navigateAyah("next")}
-            disabled={!ayahState.arabic || ayahState.loading}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:bg-slate-800 disabled:text-slate-600 text-slate-300 rounded-lg transition-colors"
-          >
-            Next Ayah →
-          </button>
-        </div>
       </main>
 
-      {/* Footer */}
-      <footer className="w-full max-w-3xl mt-8 pt-6 border-t border-slate-700/50 text-center text-slate-500 text-sm">
-        <p>
-          Data from{" "}
-          <a
-            href="https://alquran.cloud"
-            className="text-slate-400 hover:text-emerald-400 transition-colors"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            alquran.cloud
-          </a>{" "}
-          &{" "}
-          <a
-            href="https://quran.com"
-            className="text-slate-400 hover:text-emerald-400 transition-colors"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            quran.com
-          </a>
-        </p>
-      </footer>
+      {/* Navigation Controls Fixed at Bottom */}
+      <div className="fixed bottom-12 left-1/2 -translate-x-1/2 flex items-center gap-6 z-40 w-full max-w-sm px-4">
+        <button
+          onClick={() => navigateAyah("prev")}
+          disabled={!ayahState.arabic || ayahState.loading}
+          className="flex-1 flex flex-col items-center gap-1 group disabled:opacity-30"
+        >
+          <div className="w-14 h-14 bg-white/80 backdrop-blur rounded-full flex items-center justify-center border border-emerald-100 text-emerald-700 font-bold transition-all group-active:scale-90 shadow-[0_4px_12px_rgba(0,0,0,0.05)]">
+            <span className="text-xl">◀</span>
+          </div>
+          <span className="text-[10px] font-bold text-emerald-800/40 uppercase tracking-tighter">Previous</span>
+        </button>
+
+        <button
+          onClick={getRandomAyah}
+          disabled={surahs.length === 0 || ayahState.loading}
+          className="relative group transition-transform active:scale-95"
+        >
+          <div className="absolute inset-0 bg-emerald-500 rounded-full blur-2xl opacity-20 group-hover:opacity-40 transition-opacity" />
+          <div className="relative w-24 h-24 bg-emerald-600 rounded-full flex items-center justify-center shadow-[0_10px_30px_rgba(5,150,105,0.4)] border-4 border-white transition-all group-hover:bg-emerald-500 overflow-hidden">
+             <span className="text-4xl transform group-hover:rotate-12 transition-transform select-none">🎲</span>
+          </div>
+          <div className="mt-3 text-[10px] font-bold text-emerald-800 uppercase tracking-widest text-center">Random</div>
+        </button>
+
+        <button
+          onClick={() => navigateAyah("next")}
+          disabled={!ayahState.arabic || ayahState.loading}
+          className="flex-1 flex flex-col items-center gap-1 group disabled:opacity-30"
+        >
+          <div className="w-14 h-14 bg-white/80 backdrop-blur rounded-full flex items-center justify-center border border-emerald-100 text-emerald-700 font-bold transition-all group-active:scale-90 shadow-[0_4px_12px_rgba(0,0,0,0.05)]">
+            <span className="text-xl">▶</span>
+          </div>
+          <span className="text-[10px] font-bold text-emerald-800/40 uppercase tracking-tighter">Next</span>
+        </button>
+      </div>
+
+      {/* History Controls */}
+      <div className="fixed bottom-6 right-8 flex gap-3 z-40 scale-75 md:scale-100">
+        <button 
+          onClick={goBack}
+          disabled={historyIndex <= 0}
+          className="p-3 bg-white/50 backdrop-blur-sm border border-emerald-100 rounded-xl text-emerald-700 disabled:opacity-20 hover:bg-white/80 transition-all shadow-sm"
+        >
+          ↩
+        </button>
+        <button 
+          onClick={goForward}
+          disabled={historyIndex >= history.length - 1}
+          className="p-3 bg-white/50 backdrop-blur-sm border border-emerald-100 rounded-xl text-emerald-700 disabled:opacity-20 hover:bg-white/80 transition-all shadow-sm"
+        >
+          ↪
+        </button>
+      </div>
+
     </div>
   );
 }

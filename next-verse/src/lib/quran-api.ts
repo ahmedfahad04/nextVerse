@@ -53,7 +53,7 @@ export async function getAyahData(
 
     return {
       arabic,
-      translations: verseData?.verse?.translations || [],
+      translations: (verseData as any)?.translations || [],
     };
   } catch {
     return null;
