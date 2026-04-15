@@ -6,7 +6,8 @@
     "dev": "next dev --webpack",
     "build": "next build --webpack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "generate-icons": "node scripts/generate-icons.js"
   },
   "dependencies": {
     "next": "16.2.3",
@@ -25,6 +26,7 @@
     "minimatch": "^10.2.5",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "webpack": "^5.106.1"
+    "webpack": "^5.106.1",
+    "sharp": "^0.32.1"
   }
 }
