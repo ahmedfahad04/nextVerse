@@ -47,6 +47,8 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/next.svg" />
         <meta name="theme-color" content="#064e3b" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
       <body suppressHydrationWarning>{children}</body>
     </html>
