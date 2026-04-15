@@ -43,6 +43,11 @@ export default function RootLayout({
       className={`${inter.variable} ${amiri.variable}`}
       suppressHydrationWarning
     >
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+        <link rel="apple-touch-icon" href="/next.svg" />
+        <meta name="theme-color" content="#064e3b" />
+      </head>
       <body suppressHydrationWarning>{children}</body>
     </html>
   );
