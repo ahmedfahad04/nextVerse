@@ -303,7 +303,7 @@ export default function Home() {
       </header>
 
       {/* Main Content */}
-      <main className="w-full max-w-4xl flex-1 flex flex-col items-center justify-center mb-36 md:mb-40">
+      <main className="w-full max-w-4xl flex-1 flex flex-col items-center justify-center mb-36 md:mb-40 min-h-0">
         {ayahState.loading ? (
           <div className="flex flex-col items-center justify-center p-12 md:p-20 bg-white/40 backdrop-blur-3xl rounded-[3rem] md:rounded-[4rem] border-2 border-white/60 shadow-2xl">
             <div className="relative group/loading">
@@ -318,32 +318,33 @@ export default function Home() {
             </div>
           </div>
         ) : ayahState.arabic ? (
-          <div className="w-full relative group px-2 md:px-0">
-            <div className="bg-white/60 backdrop-blur-xl border border-white/40 rounded-[2rem] md:rounded-[2.5rem] p-8 md:p-12 shadow-[0_20px_50px_rgba(6,78,59,0.05)] text-center relative overflow-hidden transition-all duration-700 group-hover:shadow-[0_20px_70px_rgba(6,78,59,0.1)]">
+          <div className="w-full relative group px-2 md:px-0 max-h-[70vh] flex flex-col">
+            <div className="bg-white/60 backdrop-blur-xl border border-white/40 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-[0_20px_50px_rgba(6,78,59,0.05)] text-center relative overflow-hidden transition-all duration-700 group-hover:shadow-[0_20px_70px_rgba(6,78,59,0.1)] flex flex-col min-h-0">
               
-              <div className="flex flex-col md:flex-row items-center justify-between mb-8 pb-4 border-b border-emerald-100/30">
+              <div className="flex items-center justify-between mb-6 pb-4 border-b border-emerald-100/30 flex-shrink-0">
                 <div className="flex items-center gap-2">
                   <button 
                     onClick={() => setTempShowDetails(!tempShowDetails)}
-                    className="px-4 py-1.5 bg-emerald-50 border border-emerald-200 rounded-full text-[10px] font-black text-emerald-800 uppercase tracking-widest hover:bg-emerald-100 transition-all flex items-center gap-2"
+                    className="h-10 px-4 bg-emerald-50 border border-emerald-200 rounded-xl text-[10px] font-black text-emerald-800 uppercase tracking-widest hover:bg-emerald-100 transition-all flex items-center gap-2 shadow-sm active:scale-95"
+                    title={tempShowDetails ? "Hide Ayah Info" : "Show Ayah Info"}
                   >
-                    <span>{tempShowDetails ? "🙈" : "👁️"}</span>
-                    <span>{tempShowDetails ? "Hide Context" : "Show Context"}</span>
+                    <span className="text-sm">{tempShowDetails ? "🙈" : "👁️"}</span>
+                    <span className="hidden sm:inline">{tempShowDetails ? "Hide Context" : "Show Context"}</span>
                   </button>
                 </div>
 
                 {/* Securely Positioned Font Controls */}
-                <div className="flex items-center gap-2 mt-4 md:mt-0">
+                <div className="flex items-center gap-2">
                   <button 
                     onClick={() => setFontSize(prev => Math.min(prev + 4, 80))}
-                    className="w-10 h-10 flex items-center justify-center bg-white text-emerald-700 rounded-xl hover:bg-emerald-600 hover:text-white transition-all shadow-sm active:scale-90 border border-emerald-100"
+                    className="w-10 h-10 flex items-center justify-center bg-white text-emerald-700 rounded-xl hover:bg-emerald-600 hover:text-white transition-all shadow-sm active:scale-95 border border-emerald-100"
                     title="Increase Font"
                   >
                     <span className="text-sm font-black">A+</span>
                   </button>
                   <button 
                     onClick={() => setFontSize(prev => Math.max(prev - 4, 16))}
-                    className="w-10 h-10 flex items-center justify-center bg-white text-emerald-700 rounded-xl hover:bg-emerald-600 hover:text-white transition-all shadow-sm active:scale-90 border border-emerald-100"
+                    className="w-10 h-10 flex items-center justify-center bg-white text-emerald-700 rounded-xl hover:bg-emerald-600 hover:text-white transition-all shadow-sm active:scale-95 border border-emerald-100"
                     title="Decrease Font"
                   >
                     <span className="text-sm font-black">A-</span>
@@ -351,36 +352,60 @@ export default function Home() {
                 </div>
               </div>
 
-              {tempShowDetails && (
-                <div className="mb-8 animate-fade-in translate-y-4">
-                  <span className="text-[10px] md:text-xs font-bold text-amber-600 bg-amber-50 px-4 py-2 rounded-full uppercase tracking-[0.2em] mb-3 inline-block">
-                    {currentSurah?.englishName} • {currentSurah?.revelationType}
-                  </span>
-                  <p className="text-emerald-800/40 text-[10px] md:text-xs font-bold uppercase tracking-widest">
-                    Surah {ayahState.surah} • Ayah {ayahState.ayah}
-                  </p>
-                </div>
-              )}
-
-              <div className="space-y-6">
-                <p 
-                  className={`${arabicFont} text-emerald-950 leading-[1.8] md:leading-[2] px-4`}
-                  style={{ fontSize: `${fontSize}px` }}
-                  dir="rtl"
+              <div className="overflow-y-auto px-2 md:px-4 custom-scrollbar flex-1 pb-4 relative">
+                {/* Ayah Visibility Toggle in Corner */}
+                <button 
+                  onClick={() => setShowArabic(!showArabic)}
+                  className="absolute top-0 left-0 z-10 p-2 text-emerald-900/40 hover:text-emerald-900 transition-colors"
+                  title={showArabic ? "Hide Arabic" : "Show Arabic"}
                 >
-                  {ayahState.arabic.text}
-                </p>
-                
-                {showBengali && bengaliTranslation && (
-                  <div className="pt-6 border-t border-emerald-100/40 mt-6 max-w-3xl mx-auto">
-                    <p 
-                      className="bengali-text text-emerald-900/70 font-medium leading-relaxed italic"
-                      style={{ fontSize: `${Math.max(14, fontSize * 0.45)}px` }}
-                    >
-                      {bengaliTranslation.text}
+                  <span className="text-xl">{showArabic ? "👁️" : "🙈"}</span>
+                </button>
+
+                {tempShowDetails && (
+                  <div className="mb-8 animate-fade-in translate-y-2">
+                    <span className="text-[10px] md:text-xs font-bold text-amber-600 bg-amber-50 px-4 py-2 rounded-full uppercase tracking-[0.2em] mb-3 inline-block shadow-sm border border-amber-100/50">
+                      {currentSurah?.englishName} • {currentSurah?.revelationType}
+                    </span>
+                    <p className="text-emerald-800/40 text-[10px] md:text-xs font-bold uppercase tracking-widest">
+                      Surah {ayahState.surah} • Ayah {ayahState.ayah}
                     </p>
                   </div>
                 )}
+
+                <div className="space-y-6">
+                  {showArabic ? (
+                    <p 
+                      className={`${arabicFont} text-emerald-950 leading-[1.8] md:leading-[2.2]`}
+                      style={{ fontSize: `${fontSize}px` }}
+                      dir="rtl"
+                    >
+                      {ayahState.arabic.text}
+                    </p>
+                  ) : (
+                    <div 
+                      className="flex items-center justify-center border-2 border-dashed border-emerald-100/50 rounded-3xl bg-emerald-50/20 cursor-pointer group/reveal"
+                      style={{ minHeight: `${fontSize * 2.5}px` }}
+                      onClick={() => setShowArabic(true)}
+                    >
+                      <div className="flex flex-col items-center gap-3 opacity-20 group-hover/reveal:opacity-40 transition-opacity">
+                        <span className="text-4xl">🙈</span>
+                        <p className="text-[10px] font-black uppercase tracking-[0.3em]">Tap to reveal verse</p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {showBengali && bengaliTranslation && (
+                    <div className="pt-6 border-t border-emerald-100/40 mt-6 max-w-3xl mx-auto">
+                      <p 
+                        className="bengali-text text-emerald-900/70 font-medium leading-relaxed italic"
+                        style={{ fontSize: `${Math.max(14, fontSize * 0.45)}px` }}
+                      >
+                        {bengaliTranslation.text}
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
