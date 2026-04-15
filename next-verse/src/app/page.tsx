@@ -28,6 +28,11 @@ export default function Home() {
   const [tempShowDetails, setTempShowDetails] = useState(false); // Inline toggle
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
+  // New settings for custom fonts and sizes
+  const [arabicFont, setArabicFont] = useState("font-arabic"); // default Amiri
+  const [fontSize, setFontSize] = useState(32); // base font size in px
+  const [bengaliFontSize, setBengaliFontSize] = useState(18);
+
   const [rangeEnabled, setRangeEnabled] = useState(false);
   const [rangeStart, setRangeStart] = useState(1);
   const [rangeEnd, setRangeEnd] = useState(114);
@@ -175,6 +180,20 @@ export default function Home() {
               </div>
 
               <div className="pt-4 border-t border-emerald-50">
+                <label className="block text-emerald-800 font-medium text-sm mb-2">Preferred Arabic Font</label>
+                <select 
+                  value={arabicFont}
+                  onChange={(e) => setArabicFont(e.target.value)}
+                  className="w-full px-3 py-2 bg-emerald-50/50 border border-emerald-100 rounded-xl text-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-sm"
+                >
+                  <option value="font-arabic">Amiri (Default)</option>
+                  <option value="font-mushaf">Al Mushaf Quran</option>
+                  <option value="font-muhammadi">Muhammadi Quranic</option>
+                  <option value="font-nabi">Nabi</option>
+                </select>
+              </div>
+
+              <div className="pt-4 border-t border-emerald-50">
                 <label className="flex items-center gap-3 cursor-pointer mb-3">
                   <input
                     type="checkbox"
@@ -189,22 +208,46 @@ export default function Home() {
                     <div className="flex flex-col gap-1">
                       <span className="text-[10px] text-emerald-600 font-bold uppercase">Start</span>
                       <input
-                        type="number"
+                        type="text"
                         min={1}
                         max={114}
                         value={rangeStart}
-                        onChange={(e) => setRangeStart(Math.min(Math.max(1, parseInt(e.target.value) || 1), rangeEnd))}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === "") {
+                            setRangeStart(0 as any); // allow clear
+                            return;
+                          }
+                          const num = Math.min(Math.max(1, parseInt(val) || 1), 114);
+                          setRangeStart(num);
+                        }}
+                        onBlur={() => {
+                          if (!rangeStart) setRangeStart(1);
+                          if (rangeStart > rangeEnd) setRangeStart(rangeEnd);
+                        }}
                         className="w-full px-3 py-2 bg-emerald-50/50 border border-emerald-100 rounded-xl text-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-sm"
                       />
                     </div>
                     <div className="flex flex-col gap-1">
                       <span className="text-[10px] text-emerald-600 font-bold uppercase">End</span>
                       <input
-                        type="number"
+                        type="text"
                         min={1}
                         max={114}
                         value={rangeEnd}
-                        onChange={(e) => setRangeEnd(Math.max(Math.min(114, parseInt(e.target.value) || 114), rangeStart))}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === "") {
+                            setRangeEnd(0 as any); // allow clear
+                            return;
+                          }
+                          const num = Math.min(Math.max(1, parseInt(val) || 1), 114);
+                          setRangeEnd(num);
+                        }}
+                        onBlur={() => {
+                          if (!rangeEnd) setRangeEnd(114);
+                          if (rangeEnd < rangeStart) setRangeEnd(rangeStart);
+                        }}
                         className="w-full px-3 py-2 bg-emerald-50/50 border border-emerald-100 rounded-xl text-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-sm"
                       />
                     </div>
@@ -225,33 +268,60 @@ export default function Home() {
 
       {/* Header */}
       <header className="w-full max-w-4xl flex items-center justify-between mb-8 md:mb-12">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-extrabold bg-gradient-to-tr from-emerald-800 to-emerald-600 bg-clip-text text-transparent italic">
-            nextVerse
+        <div className="group transition-all duration-500">
+          <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-emerald-950 uppercase italic leading-none selection:bg-islam-gold selection:text-white">
+            next<span className="text-emerald-700 not-italic">Verse</span>
           </h1>
-          <p className="text-emerald-900/60 text-xs font-medium tracking-wide">
-            Divine Reflection & Practicing
+          <div className="h-1 w-12 bg-emerald-600 rounded-full mt-1.5 transition-all group-hover:w-full group-hover:bg-islam-gold" />
+          <p className="text-emerald-900/40 text-[10px] md:text-xs font-bold tracking-[0.2em] uppercase mt-1">
+            Divine Reflection & Practice
           </p>
         </div>
         <button 
           onClick={() => setIsSettingsOpen(true)}
-          className="p-2 md:p-3 bg-white/50 backdrop-blur-sm border border-emerald-100 rounded-2xl text-emerald-700 hover:bg-white/80 transition-all shadow-sm active:scale-90"
+          className="p-2.5 md:p-4 glass-card bg-emerald-900/5 hover:bg-emerald-900/10 rounded-full text-emerald-800 transition-all active:scale-95 border border-emerald-900/10"
         >
-          <span className="text-lg md:text-xl">⚙️</span>
+          <span className="text-xl md:text-2xl drop-shadow-sm">⚙️</span>
         </button>
       </header>
 
       {/* Main Content */}
       <main className="w-full max-w-4xl flex-1 flex flex-col items-center justify-center mb-36 md:mb-40">
         {ayahState.loading ? (
-          <div className="flex flex-col items-center animate-pulse">
-            <div className="text-4xl md:text-5xl mb-4 text-emerald-400">✨</div>
-            <div className="text-emerald-800/40 font-bold text-lg md:text-xl uppercase tracking-widest">Loading...</div>
+          <div className="flex flex-col items-center justify-center p-12 md:p-20 bg-white/40 backdrop-blur-3xl rounded-[3rem] md:rounded-[4rem] border-2 border-white/60 shadow-2xl">
+            <div className="relative group/loading">
+              <div className="w-24 h-24 md:w-32 md:h-32 border-[6px] border-emerald-100 border-t-emerald-600 rounded-full animate-spin shadow-inner" />
+              <div className="absolute inset-0 flex items-center justify-center text-3xl md:text-5xl animate-bounce">
+                📖
+              </div>
+              <div className="absolute -inset-4 bg-emerald-500/10 rounded-full blur-2xl animate-pulse" />
+            </div>
+            <div className="mt-8 md:mt-12 text-emerald-900/40 text-[10px] md:text-sm font-black tracking-[0.4em] uppercase text-center max-w-[200px] leading-loose">
+              Refining the <br/> Divine Verse
+            </div>
           </div>
         ) : ayahState.arabic ? (
           <div className="w-full relative group px-2 md:px-0">
-            <div className="bg-white/60 backdrop-blur-xl border border-white/40 rounded-[2rem] md:rounded-[2.5rem] p-8 md:p-16 shadow-[0_20px_50px_rgba(6,78,59,0.05)] text-center relative overflow-hidden transition-all duration-700 group-hover:shadow-[0_20px_70px_rgba(6,78,59,0.1)]">
+            <div className="bg-white/60 backdrop-blur-xl border border-white/40 rounded-[2rem] md:rounded-[2.5rem] p-8 md:p-12 shadow-[0_20px_50px_rgba(6,78,59,0.05)] text-center relative overflow-hidden transition-all duration-700 group-hover:shadow-[0_20px_70px_rgba(6,78,59,0.1)]">
               
+              {/* Dynamic Font Size Controls */}
+              <div className="absolute top-4 right-4 flex flex-col gap-2 md:flex-row md:top-6 md:right-6">
+                <button 
+                  onClick={() => setFontSize(prev => Math.min(prev + 4, 80))}
+                  className="p-2 bg-white/80 text-emerald-700 rounded-full hover:bg-emerald-600 hover:text-white transition-all shadow-sm active:scale-90 border border-emerald-50"
+                  title="Increase Arabic Font"
+                >
+                  <span className="text-xs md:text-sm font-bold">A+</span>
+                </button>
+                <button 
+                  onClick={() => setFontSize(prev => Math.max(prev - 4, 20))}
+                  className="p-2 bg-white/80 text-emerald-700 rounded-full hover:bg-emerald-600 hover:text-white transition-all shadow-sm active:scale-90 border border-emerald-50"
+                  title="Decrease Arabic Font"
+                >
+                  <span className="text-xs md:text-sm font-bold">A-</span>
+                </button>
+              </div>
+
               <div className="absolute top-6 md:top-8 left-1/2 -translate-x-1/2 flex items-center gap-2">
                 <button 
                   onClick={() => setTempShowDetails(!tempShowDetails)}
@@ -262,7 +332,7 @@ export default function Home() {
               </div>
 
               {tempShowDetails && (
-                <div className="mt-4 mb-8 md:mb-10 animate-fade-in">
+                <div className="mt-4 mb-6 md:mb-8 animate-fade-in translate-y-4">
                   <span className="text-[10px] md:text-xs font-bold text-amber-600 bg-amber-50 px-3 md:px-4 py-1.5 rounded-full uppercase tracking-[0.2em] mb-2 md:mb-3 inline-block">
                     {currentSurah?.englishName} • {currentSurah?.revelationType}
                   </span>
@@ -272,26 +342,32 @@ export default function Home() {
                 </div>
               )}
 
-              <div className="mb-8 md:mb-12">
-                <p className="arabic-text text-3xl md:text-5xl text-emerald-950 leading-[2] md:leading-[1.8]">
+              <div className="mb-4 md:mb-6">
+                <p 
+                  className={`${arabicFont} text-emerald-950 leading-[1.6] md:leading-[1.8]`}
+                  style={{ fontSize: `${fontSize}px` }}
+                >
                   {ayahState.arabic.text}
                 </p>
+                
+                {showBengali && bengaliTranslation && (
+                  <div className="pt-4 md:pt-6 border-t border-emerald-100/30 mt-4 md:mt-6 max-w-2xl mx-auto">
+                    <p 
+                      className="bengali-text text-emerald-900/80 font-medium leading-relaxed italic"
+                      style={{ fontSize: `${fontSize * 0.5}px` }}
+                    >
+                      {bengaliTranslation.text}
+                    </p>
+                  </div>
+                )}
               </div>
-
-              {showBengali && bengaliTranslation && (
-                <div className="pt-8 md:pt-10 border-t border-emerald-100/50">
-                  <p className="bengali-text text-lg md:text-xl text-emerald-900 leading-relaxed font-medium">
-                    {bengaliTranslation.text}
-                  </p>
-                </div>
-              )}
             </div>
           </div>
         ) : (
-          <div className="text-center group">
-            <div className="text-6xl md:text-8xl mb-6 md:mb-8 animate-float opacity-80 cursor-default select-none">🌙</div>
+          <div className="text-center group cursor-pointer" onClick={getRandomAyah}>
+            <div className="text-6xl md:text-8xl mb-6 md:mb-8 animate-float opacity-80 group-hover:scale-110 transition-transform duration-500 cursor-pointer select-none">🌙</div>
             <p className="text-emerald-900 text-xl md:text-2xl font-semibold opacity-60 group-hover:opacity-100 transition-opacity px-6">
-              Tap the button to reveal a verse
+              Tap the moon to reveal a verse
             </p>
           </div>
         )}

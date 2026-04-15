@@ -4,11 +4,39 @@
   --font-arabic: "Amiri", "Scheherazade New", serif;
   --font-bengali: "Hind Siliguri", "Noto Sans Bengali", sans-serif;
   
+  --font-mushaf: "Al Mushaf Quran", serif;
+  --font-muhammadi: "MUHAMMADI QURANIC FONT", serif;
+  --font-nabi: "Nabi", serif;
+
   --color-islam-emerald: #064e3b;
   --color-islam-gold: #b45309;
   --color-islam-cream: #fdfbf7;
   --color-islam-teal: #134e4a;
   --color-islam-mint: #f0fdf4;
+}
+
+@font-face {
+  font-family: 'Al Mushaf Quran';
+  src: url('/font/Al Mushaf Quran.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'MUHAMMADI QURANIC FONT';
+  src: url('/font/MUHAMMADI QURANIC FONT.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Nabi';
+  src: url('/font/Nabi.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
 }
 
 :root {
