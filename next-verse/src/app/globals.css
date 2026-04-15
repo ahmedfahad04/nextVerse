@@ -1,26 +1,76 @@
 @import "tailwindcss";
 
+@theme {
+  --font-arabic: "Amiri", "Scheherazade New", serif;
+  --font-bengali: "Hind Siliguri", "Noto Sans Bengali", sans-serif;
+  
+  --color-islam-emerald: #064e3b;
+  --color-islam-gold: #b45309;
+  --color-islam-cream: #fdfbf7;
+  --color-islam-teal: #134e4a;
+  --color-islam-mint: #f0fdf4;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #fdfbf7; /* islam-cream */
+  --foreground: #064e3b; /* islam-emerald */
+  --card-bg: #ffffff;
+  --card-border: #e2e8f0;
+  --primary: #059669;
+  --primary-hover: #047857;
+  --secondary: #b45309;
+  --secondary-hover: #92400e;
+  --text-muted: #64748b;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  body {
+    @apply bg-[var(--background)] text-[var(--foreground)] selection:bg-emerald-100;
   }
+}
+
+.arabic-text {
+  font-family: var(--font-arabic);
+  direction: rtl;
+}
+
+.bengali-text {
+  font-family: var(--font-bengali);
+}
+
+/* Custom Utilities */
+.glass-effect {
+  @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-xl;
+}
+
+.islamic-pattern {
+  background-image: url("https://www.transparenttextures.com/patterns/islamic-art.png");
+  opacity: 0.03;
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter), sans-serif;
+  min-height: 100vh;
+}
+
+.arabic-text {
+  font-family: var(--font-amiri), serif;
+  line-height: 2;
+  direction: rtl;
 }
