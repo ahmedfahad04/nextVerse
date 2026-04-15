@@ -180,6 +180,13 @@ export default function Home() {
               </div>
 
               <div className="pt-4 border-t border-emerald-50">
+                {/* Arabic Font Preview */}
+                <div className="mt-3 p-4 bg-emerald-50/30 border border-emerald-100/50 rounded-2xl text-center overflow-hidden">
+                  <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest mb-2 opacity-50">Preview</p>
+                  <p className={`${arabicFont} text-2xl md:text-3xl text-emerald-950 leading-relaxed`} dir="rtl">
+                    بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
+                  </p>
+                </div>
                 <label className="block text-emerald-800 font-medium text-sm mb-2">Preferred Arabic Font</label>
                 <select 
                   value={arabicFont}
@@ -191,6 +198,8 @@ export default function Home() {
                   <option value="font-muhammadi">Muhammadi Quranic</option>
                   <option value="font-nabi">Nabi</option>
                 </select>
+                
+                
               </div>
 
               <div className="pt-4 border-t border-emerald-50">
@@ -268,14 +277,22 @@ export default function Home() {
 
       {/* Header */}
       <header className="w-full max-w-4xl flex items-center justify-between mb-8 md:mb-12">
-        <div className="group transition-all duration-500">
-          <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-emerald-950 uppercase italic leading-none selection:bg-islam-gold selection:text-white">
-            next<span className="text-emerald-700 not-italic">Verse</span>
-          </h1>
-          <div className="h-1 w-12 bg-emerald-600 rounded-full mt-1.5 transition-all group-hover:w-full group-hover:bg-islam-gold" />
-          <p className="text-emerald-900/40 text-[10px] md:text-xs font-bold tracking-[0.2em] uppercase mt-1">
-            Divine Reflection & Practice
-          </p>
+        <div className="flex items-center gap-3 md:gap-5 group transition-all duration-500">
+          {/* <div className="relative w-12 h-12 md:w-16 md:h-16 flex items-center justify-center">
+            <svg viewBox="0 0 100 100" className="w-full h-full fill-emerald-800 drop-shadow-sm group-hover:fill-emerald-600 transition-colors">
+              <path d="M50 5 L63 25 L85 25 L75 44 L90 63 L70 63 L60 85 L44 75 L25 90 L25 70 L5 60 L25 44 L15 25 L37 25 Z" />
+              <path d="M50 15 L58 30 L78 30 L68 44 L81 58 L63 58 L54 75 L43 66 L30 78 L30 58 L18 52 L32 41 L27 30 L45 30 Z" fill="white" />
+              <circle cx="50" cy="50" r="8" className="fill-emerald-800 group-hover:fill-emerald-600" />
+            </svg>
+          </div> */}
+          <div>
+            <h1 className="text-2xl md:text-4xl font-black tracking-tighter text-emerald-950 uppercase leading-none selection:bg-islam-gold selection:text-white">
+              next<span className="text-emerald-700">Verse</span>
+            </h1>
+            <p className="text-emerald-900/40 text-[9px] md:text-xs font-bold tracking-[0.3em] uppercase mt-1">
+              Divine Reflection & Practice
+            </p>
+          </div>
         </div>
         <button 
           onClick={() => setIsSettingsOpen(true)}
@@ -304,57 +321,61 @@ export default function Home() {
           <div className="w-full relative group px-2 md:px-0">
             <div className="bg-white/60 backdrop-blur-xl border border-white/40 rounded-[2rem] md:rounded-[2.5rem] p-8 md:p-12 shadow-[0_20px_50px_rgba(6,78,59,0.05)] text-center relative overflow-hidden transition-all duration-700 group-hover:shadow-[0_20px_70px_rgba(6,78,59,0.1)]">
               
-              {/* Dynamic Font Size Controls */}
-              <div className="absolute top-4 right-4 flex flex-col gap-2 md:flex-row md:top-6 md:right-6">
-                <button 
-                  onClick={() => setFontSize(prev => Math.min(prev + 4, 80))}
-                  className="p-2 bg-white/80 text-emerald-700 rounded-full hover:bg-emerald-600 hover:text-white transition-all shadow-sm active:scale-90 border border-emerald-50"
-                  title="Increase Arabic Font"
-                >
-                  <span className="text-xs md:text-sm font-bold">A+</span>
-                </button>
-                <button 
-                  onClick={() => setFontSize(prev => Math.max(prev - 4, 20))}
-                  className="p-2 bg-white/80 text-emerald-700 rounded-full hover:bg-emerald-600 hover:text-white transition-all shadow-sm active:scale-90 border border-emerald-50"
-                  title="Decrease Arabic Font"
-                >
-                  <span className="text-xs md:text-sm font-bold">A-</span>
-                </button>
-              </div>
+              <div className="flex flex-col md:flex-row items-center justify-between mb-8 pb-4 border-b border-emerald-100/30">
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => setTempShowDetails(!tempShowDetails)}
+                    className="px-4 py-1.5 bg-emerald-50 border border-emerald-200 rounded-full text-[10px] font-black text-emerald-800 uppercase tracking-widest hover:bg-emerald-100 transition-all flex items-center gap-2"
+                  >
+                    <span>{tempShowDetails ? "🙈" : "👁️"}</span>
+                    <span>{tempShowDetails ? "Hide Context" : "Show Context"}</span>
+                  </button>
+                </div>
 
-              <div className="absolute top-6 md:top-8 left-1/2 -translate-x-1/2 flex items-center gap-2">
-                <button 
-                  onClick={() => setTempShowDetails(!tempShowDetails)}
-                  className="px-3 py-1 bg-emerald-50 border border-emerald-100 rounded-full text-[9px] md:text-[10px] font-bold text-emerald-700 uppercase tracking-widest hover:bg-emerald-100 transition-colors"
-                >
-                  {tempShowDetails ? "🙈 Hide Details" : "👁️ Show Details"}
-                </button>
+                {/* Securely Positioned Font Controls */}
+                <div className="flex items-center gap-2 mt-4 md:mt-0">
+                  <button 
+                    onClick={() => setFontSize(prev => Math.min(prev + 4, 80))}
+                    className="w-10 h-10 flex items-center justify-center bg-white text-emerald-700 rounded-xl hover:bg-emerald-600 hover:text-white transition-all shadow-sm active:scale-90 border border-emerald-100"
+                    title="Increase Font"
+                  >
+                    <span className="text-sm font-black">A+</span>
+                  </button>
+                  <button 
+                    onClick={() => setFontSize(prev => Math.max(prev - 4, 16))}
+                    className="w-10 h-10 flex items-center justify-center bg-white text-emerald-700 rounded-xl hover:bg-emerald-600 hover:text-white transition-all shadow-sm active:scale-90 border border-emerald-100"
+                    title="Decrease Font"
+                  >
+                    <span className="text-sm font-black">A-</span>
+                  </button>
+                </div>
               </div>
 
               {tempShowDetails && (
-                <div className="mt-4 mb-6 md:mb-8 animate-fade-in translate-y-4">
-                  <span className="text-[10px] md:text-xs font-bold text-amber-600 bg-amber-50 px-3 md:px-4 py-1.5 rounded-full uppercase tracking-[0.2em] mb-2 md:mb-3 inline-block">
+                <div className="mb-8 animate-fade-in translate-y-4">
+                  <span className="text-[10px] md:text-xs font-bold text-amber-600 bg-amber-50 px-4 py-2 rounded-full uppercase tracking-[0.2em] mb-3 inline-block">
                     {currentSurah?.englishName} • {currentSurah?.revelationType}
                   </span>
-                  <p className="text-emerald-800/40 text-[10px] md:text-xs font-medium">
+                  <p className="text-emerald-800/40 text-[10px] md:text-xs font-bold uppercase tracking-widest">
                     Surah {ayahState.surah} • Ayah {ayahState.ayah}
                   </p>
                 </div>
               )}
 
-              <div className="mb-4 md:mb-6">
+              <div className="space-y-6">
                 <p 
-                  className={`${arabicFont} text-emerald-950 leading-[1.6] md:leading-[1.8]`}
+                  className={`${arabicFont} text-emerald-950 leading-[1.8] md:leading-[2] px-4`}
                   style={{ fontSize: `${fontSize}px` }}
+                  dir="rtl"
                 >
                   {ayahState.arabic.text}
                 </p>
                 
                 {showBengali && bengaliTranslation && (
-                  <div className="pt-4 md:pt-6 border-t border-emerald-100/30 mt-4 md:mt-6 max-w-2xl mx-auto">
+                  <div className="pt-6 border-t border-emerald-100/40 mt-6 max-w-3xl mx-auto">
                     <p 
-                      className="bengali-text text-emerald-900/80 font-medium leading-relaxed italic"
-                      style={{ fontSize: `${fontSize * 0.5}px` }}
+                      className="bengali-text text-emerald-900/70 font-medium leading-relaxed italic"
+                      style={{ fontSize: `${Math.max(14, fontSize * 0.45)}px` }}
                     >
                       {bengaliTranslation.text}
                     </p>
@@ -411,7 +432,7 @@ export default function Home() {
       </div>
 
       {/* History Controls */}
-      <div className="fixed bottom-6 right-6 md:right-8 flex gap-2 md:gap-3 z-40 scale-[0.8] md:scale-100 origin-bottom-right">
+      {/* <div className="fixed bottom-6 right-6 md:right-8 flex gap-2 md:gap-3 z-40 scale-[0.8] md:scale-100 origin-bottom-right">
         <button 
           onClick={goBack}
           disabled={historyIndex <= 0}
@@ -426,7 +447,7 @@ export default function Home() {
         >
           ↪
         </button>
-      </div>
+      </div> */}
 
     </div>
   );
