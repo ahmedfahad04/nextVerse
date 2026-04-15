@@ -16,6 +16,20 @@ const amiri = Amiri({
 export const metadata: Metadata = {
   title: "nextVerse - Quran Memorizer",
   description: "A Quran memorization helper application",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    title: "nextVerse",
+    statusBarStyle: "black-translucent",
+  },
+};
+
+export const viewport = {
+  themeColor: "#064e3b",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({
