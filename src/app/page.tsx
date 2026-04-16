@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { getAyahData, getSurahs } from "@/lib/quran-api";
-import { Surah, ArabicAyah, Translation } from "@/types/quran";
+import { getAyahData, getSurahs, getVerseRecitationByKey, getReciters } from "@/lib/quran-api";
+import { Surah, ArabicAyah, Translation, VerseRecitation, Reciter } from "@/types/quran";
+import MinimalAudioPlayer from "@/components/AudioPlayer";
 
 interface AyahState {
   surah: number;
@@ -10,6 +11,12 @@ interface AyahState {
   arabic: ArabicAyah | null;
   translations: Translation[];
   loading: boolean;
+}
+
+interface AudioState {
+  audio: VerseRecitation | null;
+  loading: boolean;
+  error: string | null;
 }
 
 export default function Home() {
@@ -22,6 +29,15 @@ export default function Home() {
     loading: false,
   });
   
+  // Audio State
+  const [audioState, setAudioState] = useState<AudioState>({
+    audio: null,
+    loading: false,
+    error: null,
+  });
+  const [reciters, setReciters] = useState<Reciter[]>([]);
+  const [selectedReciterId, setSelectedReciterId] = useState(4); // Default: Al-Afasy
+  
   // Settings Toggles
   const [showBengali, setShowBengali] = useState(true);
   const [showDetails, setShowDetails] = useState(false); // Default setting
@@ -31,7 +47,7 @@ export default function Home() {
   // New settings for custom fonts and sizes
   const [arabicFont, setArabicFont] = useState("font-arabic"); // default Amiri
   const [fontSize, setFontSize] = useState(32); // base font size in px
-  const [bengaliFontSize, setBengaliFontSize] = useState(18);
+  // const [bengaliFontSize, setBengaliFontSize] = useState(18);
 
   const [rangeEnabled, setRangeEnabled] = useState(false);
   const [rangeStart, setRangeStart] = useState(1);
@@ -41,6 +57,11 @@ export default function Home() {
 
   useEffect(() => {
     getSurahs().then(setSurahs).catch(console.error);
+    getReciters()
+      .then((reciters) => {
+        setReciters(reciters);
+      })
+      .catch(console.error);
   }, []);
 
   // Sync tempShowDetails with showDetails when ayah changes
@@ -74,17 +95,47 @@ export default function Home() {
 
   const fetchAyah = async (surah: number, ayah: number) => {
     setAyahState((prev) => ({ ...prev, loading: true }));
-    const data = await getAyahData(surah, ayah);
-    if (data) {
-      setAyahState({
-        surah,
-        ayah,
-        arabic: data.arabic,
-        translations: data.translations,
-        loading: false,
-      });
-    } else {
+    setAudioState({ audio: null, loading: true, error: null });
+    
+    try {
+      // Fetch ayah data
+      const data = await getAyahData(surah, ayah);
+      if (data) {
+        setAyahState({
+          surah,
+          ayah,
+          arabic: data.arabic,
+          translations: data.translations,
+          loading: false,
+        });
+      } else {
+        setAyahState((prev) => ({ ...prev, loading: false }));
+      }
+
+      // Fetch audio data
+      const verseKey = `${surah}:${ayah}`;
+      const audioData = await getVerseRecitationByKey(verseKey, selectedReciterId);
+      if (audioData) {
+        setAudioState({
+          audio: audioData,
+          loading: false,
+          error: null,
+        });
+      } else {
+        setAudioState({
+          audio: null,
+          loading: false,
+          error: "Audio not available for this verse.",
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching ayah or audio:", error);
       setAyahState((prev) => ({ ...prev, loading: false }));
+      setAudioState({
+        audio: null,
+        loading: false,
+        error: "Failed to load audio. Please try again.",
+      });
     }
   };
 
@@ -141,6 +192,38 @@ export default function Home() {
     }
   };
 
+  // Handle reciter change - refetch audio for current ayah
+  const handleReciterChange = async (reciterId: number) => {
+    setSelectedReciterId(reciterId);
+    if (ayahState.surah && ayahState.ayah) {
+      const verseKey = `${ayahState.surah}:${ayahState.ayah}`;
+      setAudioState({ audio: null, loading: true, error: null });
+      try {
+        const audioData = await getVerseRecitationByKey(verseKey, reciterId);
+        if (audioData) {
+          setAudioState({
+            audio: audioData,
+            loading: false,
+            error: null,
+          });
+        } else {
+          setAudioState({
+            audio: null,
+            loading: false,
+            error: "Audio not available for this verse.",
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching audio:", error);
+        setAudioState({
+          audio: null,
+          loading: false,
+          error: "Failed to load audio. Please try again.",
+        });
+      }
+    }
+  };
+
   const currentSurah = surahs.find((s) => s.number === ayahState.surah);
   const bengaliTranslation = ayahState.translations.find(
     (t) => t.resource_id === 161
@@ -177,6 +260,22 @@ export default function Home() {
                 >
                   <div className={`absolute top-0.5 left-0.5 w-4 md:w-5 h-4 md:h-5 bg-white rounded-full transition-transform ${showDetails ? 'translate-x-5 md:translate-x-6' : ''}`} />
                 </button>
+              </div>
+
+              <div className="pt-4 border-t border-emerald-50">
+                <label className="block text-emerald-800 font-medium text-sm mb-3">Quranic Reciter</label>
+                <select
+                  value={selectedReciterId}
+                  onChange={(e) => handleReciterChange(parseInt(e.target.value))}
+                  className="w-full px-3 py-2 md:py-2.5 bg-emerald-50/50 border border-emerald-100 rounded-xl text-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-sm font-medium"
+                >
+                  {reciters.map((reciter) => (
+                    <option key={reciter.id} value={reciter.id}>
+                      {reciter.englishName}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-emerald-600/60 mt-2">Select your preferred reciter for verse audio</p>
               </div>
 
               <div className="pt-4 border-t border-emerald-50">
@@ -313,15 +412,15 @@ export default function Home() {
               </div>
               <div className="absolute -inset-4 bg-emerald-500/10 rounded-full blur-2xl animate-pulse" />
             </div>
-            <div className="mt-8 md:mt-12 text-emerald-900/40 text-[10px] md:text-sm font-black tracking-[0.4em] uppercase text-center max-w-[200px] leading-loose">
+            <div className="mt-8 md:mt-12 text-emerald-900/40 text-[10px] md:text-sm font-black tracking-[0.4em] uppercase text-center max-w-50 leading-loose">
               Refining the <br/> Divine Verse
             </div>
           </div>
         ) : ayahState.arabic ? (
           <div className="w-full relative group px-2 md:px-0 max-h-[75vh] flex flex-col">
-            <div className="bg-white/60 backdrop-blur-xl border border-white/40 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-[0_20px_50px_rgba(6,78,59,0.05)] text-center relative overflow-hidden transition-all duration-700 group-hover:shadow-[0_20px_70px_rgba(6,78,59,0.1)] flex flex-col min-h-0">
+            <div className="bg-white/60 backdrop-blur-xl border border-white/40 rounded-4xl md:rounded-[2.5rem] p-6 md:p-10 shadow-[0_20px_50px_rgba(6,78,59,0.05)] text-center relative overflow-hidden transition-all duration-700 group-hover:shadow-[0_20px_70px_rgba(6,78,59,0.1)] flex flex-col min-h-0">
               
-              <div className="flex items-center justify-between mb-6 pb-4 border-b border-emerald-100/30 flex-shrink-0">
+              <div className="flex items-center justify-between mb-6 pb-4 border-b border-emerald-100/30 shrink-0">
                 {/* Modern Ayah/Surah Label with Reveal Toggle */}
                 <div className="flex items-center gap-1.5 bg-emerald-50/50 border border-emerald-100 p-1 rounded-2xl pr-4">
                   <div className={`px-3 py-1.5 transition-all duration-500 rounded-xl flex items-center gap-2 ${!tempShowDetails ? "blur-[3px] select-none opacity-40 bg-emerald-100/20" : "blur-0 bg-white shadow-sm"}`}>
@@ -375,6 +474,29 @@ export default function Home() {
                       >
                         {bengaliTranslation.text}
                       </p>
+                    </div>
+                  )}
+
+                  {/* Minimalist Audio Player at Bottom */}
+                  {audioState.audio && (
+                    <div className="mt-6 pt-4 border-t border-emerald-100/40">
+                      {audioState.audio ? (
+                        <MinimalAudioPlayer
+                          audioUrl={audioState.audio.url}
+                          verseKey={`${ayahState.surah}:${ayahState.ayah}`}
+                        />
+                      ) : audioState.loading ? (
+                        <div className="py-3 text-center">
+                          <div className="inline-flex items-center gap-2 text-emerald-600">
+                            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                            <span className="text-xs md:text-sm font-medium">Loading audio...</span>
+                          </div>
+                        </div>
+                      ) : audioState.error ? (
+                        <div className="py-2 px-3 bg-red-50/80 border border-red-200 rounded-lg text-red-600 text-xs md:text-sm font-medium text-center">
+                          {audioState.error}
+                        </div>
+                      ) : null}
                     </div>
                   )}
                 </div>
