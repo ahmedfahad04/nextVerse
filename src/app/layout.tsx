@@ -14,7 +14,7 @@ const amiri = Amiri({
 });
 
 export const metadata: Metadata = {
-  title: "nextVerse - Quran Memorizer",
+  title: "nextVerse - Active Recall System for Quran",
   description: "A Quran memorization helper application",
   manifest: "/manifest.json",
   appleWebApp: {

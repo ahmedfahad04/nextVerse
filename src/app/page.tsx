@@ -1,11 +1,28 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { getAyahData, getSurahs, getVerseRecitationByKey, getReciters } from "@/lib/quran-api";
-import { Surah, ArabicAyah, Translation, VerseRecitation, Reciter } from "@/types/quran";
+import Image from "next/image";
+import {
+  getAyahData,
+  getSurahs,
+  getVerseRecitationByKey,
+  getReciters,
+} from "@/lib/quran-api";
+import {
+  Surah,
+  ArabicAyah,
+  Translation,
+  VerseRecitation,
+  Reciter,
+} from "@/types/quran";
 import MinimalAudioPlayer from "@/components/AudioPlayer";
 import SurahSelector from "@/components/SurahSelector";
-import { loadSettings, saveSettings, resetSettings, cacheSurahData } from "@/lib/settings";
+import {
+  loadSettings,
+  saveSettings,
+  resetSettings,
+  cacheSurahData,
+} from "@/lib/settings";
 
 interface AyahState {
   surah: number;
@@ -30,7 +47,7 @@ export default function Home() {
     translations: [],
     loading: false,
   });
-  
+
   // Audio State
   const [audioState, setAudioState] = useState<AudioState>({
     audio: null,
@@ -38,28 +55,37 @@ export default function Home() {
     error: null,
   });
   const [reciters, setReciters] = useState<Reciter[]>([]);
-  
+
   // Load settings from localStorage
   const settings = loadSettings();
   const [showBengali, setShowBengali] = useState(settings.showBengali);
   const [showDetails, setShowDetails] = useState(settings.showDetails);
   const [tempShowDetails, setTempShowDetails] = useState(settings.showDetails);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [selectedReciterId, setSelectedReciterId] = useState(settings.selectedReciterId);
+  const [selectedReciterId, setSelectedReciterId] = useState(
+    settings.selectedReciterId,
+  );
   const [arabicFont, setArabicFont] = useState(settings.arabicFont);
   const [fontSize, setFontSize] = useState(settings.fontSize);
   const [rangeEnabled, setRangeEnabled] = useState(settings.rangeEnabled);
   const [rangeStart, setRangeStart] = useState(settings.rangeStart);
   const [rangeEnd, setRangeEnd] = useState(settings.rangeEnd);
-  
-  const [history, setHistory] = useState<Array<{ surah: number; ayah: number }>>([]);
+  const [rangeStartAyat, setRangeStartAyat] = useState(settings.rangeStartAyat);
+  const [rangeEndAyat, setRangeEndAyat] = useState(settings.rangeEndAyat);
+  const [audioAutoplay, setAudioAutoplay] = useState(settings.audioAutoplay);
+
+  const [history, setHistory] = useState<
+    Array<{ surah: number; ayah: number }>
+  >([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
 
   useEffect(() => {
-    getSurahs().then((data) => {
-      setSurahs(data);
-      cacheSurahData(data); // Cache surahs to localStorage
-    }).catch(console.error);
+    getSurahs()
+      .then((data) => {
+        setSurahs(data);
+        cacheSurahData(data); // Cache surahs to localStorage
+      })
+      .catch(console.error);
     getReciters()
       .then((reciters) => {
         setReciters(reciters);
@@ -78,8 +104,23 @@ export default function Home() {
       rangeEnabled,
       rangeStart,
       rangeEnd,
+      rangeStartAyat,
+      rangeEndAyat,
+      audioAutoplay,
     });
-  }, [showBengali, showDetails, arabicFont, fontSize, selectedReciterId, rangeEnabled, rangeStart, rangeEnd]);
+  }, [
+    showBengali,
+    showDetails,
+    arabicFont,
+    fontSize,
+    selectedReciterId,
+    rangeEnabled,
+    rangeStart,
+    rangeEnd,
+    rangeStartAyat,
+    rangeEndAyat,
+    audioAutoplay,
+  ]);
 
   // Sync tempShowDetails with showDetails when ayah changes
   useEffect(() => {
@@ -97,7 +138,8 @@ export default function Home() {
     }
     if (validSurahs.length === 0) return;
 
-    const randomSurah = validSurahs[Math.floor(Math.random() * validSurahs.length)];
+    const randomSurah =
+      validSurahs[Math.floor(Math.random() * validSurahs.length)];
     const surah = surahs.find((s) => s.number === randomSurah);
     if (!surah) return;
 
@@ -113,7 +155,7 @@ export default function Home() {
   const fetchAyah = async (surah: number, ayah: number) => {
     setAyahState((prev) => ({ ...prev, loading: true }));
     setAudioState({ audio: null, loading: true, error: null });
-    
+
     try {
       // Fetch ayah data
       const data = await getAyahData(surah, ayah);
@@ -131,7 +173,10 @@ export default function Home() {
 
       // Fetch audio data
       const verseKey = `${surah}:${ayah}`;
-      const audioData = await getVerseRecitationByKey(verseKey, selectedReciterId);
+      const audioData = await getVerseRecitationByKey(
+        verseKey,
+        selectedReciterId,
+      );
       if (audioData) {
         setAudioState({
           audio: audioData,
@@ -243,143 +288,253 @@ export default function Home() {
 
   const currentSurah = surahs.find((s) => s.number === ayahState.surah);
   const bengaliTranslation = ayahState.translations.find(
-    (t) => t.resource_id === 161
+    (t) => t.resource_id === 161,
   );
 
   return (
     <div className="min-h-screen relative flex flex-col items-center px-4 py-6 md:py-8 overflow-hidden safe-area-inset">
       <div className="islamic-pattern" />
-      
+
       {/* Settings Modal */}
       {isSettingsOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-3xl w-full max-w-sm p-6 md:p-8 shadow-2xl border border-emerald-50">
-            <h2 className="text-xl md:text-2xl font-bold text-emerald-900 mb-6 flex items-center gap-2">
-              ⚙️ Settings
-            </h2>
-            
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <span className="text-emerald-800 font-medium text-sm md:text-base">Show Bengali Translation</span>
-                <button 
-                  onClick={() => setShowBengali(!showBengali)}
-                  className={`w-10 md:w-12 h-5 md:h-6 rounded-full transition-colors relative ${showBengali ? 'bg-emerald-500' : 'bg-slate-300'}`}
-                >
-                  <div className={`absolute top-0.5 left-0.5 w-4 md:w-5 h-4 md:h-5 bg-white rounded-full transition-transform ${showBengali ? 'translate-x-5 md:translate-x-6' : ''}`} />
-                </button>
-              </div>
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/40 backdrop-blur-sm p-3">
+          <div className="min-h-full flex items-center justify-center py-6">
+            <div className="bg-white rounded-2xl w-full max-w-sm p-5 shadow-2xl border border-emerald-50">
+              <h2 className="text-lg md:text-xl font-bold text-emerald-900 mb-4 flex items-center gap-2">
+                ⚙️ Settings
+              </h2>
 
-              <div className="flex items-center justify-between">
-                <span className="text-emerald-800 font-medium text-xs md:text-sm">Default Show Ayah Details</span>
-                <button 
-                  onClick={() => setShowDetails(!showDetails)}
-                  className={`w-10 md:w-12 h-5 md:h-6 rounded-full transition-colors relative ${showDetails ? 'bg-emerald-500' : 'bg-slate-300'}`}
-                >
-                  <div className={`absolute top-0.5 left-0.5 w-4 md:w-5 h-4 md:h-5 bg-white rounded-full transition-transform ${showDetails ? 'translate-x-5 md:translate-x-6' : ''}`} />
-                </button>
-              </div>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-emerald-800 font-medium text-xs md:text-sm">
+                    Show Bengali Translation
+                  </span>
+                  <button
+                    onClick={() => setShowBengali(!showBengali)}
+                    className={`w-9 md:w-10 h-5 rounded-full transition-colors relative ${showBengali ? "bg-emerald-500" : "bg-slate-300"}`}
+                  >
+                    <div
+                      className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform ${showBengali ? "translate-x-4 md:translate-x-5" : ""}`}
+                    />
+                  </button>
+                </div>
 
-              <div className="pt-4 border-t border-emerald-50">
-                <label className="block text-emerald-800 font-medium text-sm mb-3">Quranic Reciter</label>
-                <select
-                  value={selectedReciterId}
-                  onChange={(e) => handleReciterChange(parseInt(e.target.value))}
-                  className="w-full px-3 py-2 md:py-2.5 bg-emerald-50/50 border border-emerald-100 rounded-xl text-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-sm font-medium"
-                >
-                  {reciters.length === 0 ? (
-                    <option value={selectedReciterId}>Loading reciters...</option>
-                  ) : (
-                    reciters.map((reciter) => (
-                      <option key={reciter.id} value={reciter.id}>
-                        {reciter.englishName}
+                <div className="flex items-center justify-between">
+                  <span className="text-emerald-800 font-medium text-xs md:text-sm">
+                    Default Show Ayah Details
+                  </span>
+                  <button
+                    onClick={() => setShowDetails(!showDetails)}
+                    className={`w-9 md:w-10 h-5 rounded-full transition-colors relative ${showDetails ? "bg-emerald-500" : "bg-slate-300"}`}
+                  >
+                    <div
+                      className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform ${showDetails ? "translate-x-4 md:translate-x-5" : ""}`}
+                    />
+                  </button>
+                </div>
+
+                {/* <div className="pt-3 border-t border-emerald-50">
+                  <label className="block text-emerald-800 font-medium text-xs md:text-sm mb-2">
+                    Quranic Reciter
+                  </label>
+                  <select
+                    value={selectedReciterId}
+                    onChange={(e) =>
+                      handleReciterChange(parseInt(e.target.value))
+                    }
+                    className="w-full px-2 py-1.5 md:py-2 bg-emerald-50/50 border border-emerald-100 rounded-xl text-emerald-900 focus:outline-none focus:ring-1 focus:ring-emerald-500/20 text-xs font-medium"
+                  >
+                    {reciters.length === 0 ? (
+                      <option value={selectedReciterId}>
+                        Loading reciters...
                       </option>
-                    ))
-                  )}
-                </select>
-                <p className="text-xs text-emerald-600/60 mt-2">Select your preferred reciter for verse audio</p>
-              </div>
+                    ) : (
+                      reciters.map((reciter) => (
+                        <option key={reciter.id} value={reciter.id}>
+                          {reciter.englishName}
+                        </option>
+                      ))
+                    )}
+                  </select>
+                </div> */}
 
-              <div className="pt-4 border-t border-emerald-50">
+                <div className="pt-3 border-t border-emerald-50">
+                  <label className="flex items-center justify-between">
+                    <span className="text-emerald-800 font-medium text-xs md:text-sm">
+                      Audio Autoplay
+                    </span>
+                    <button
+                      onClick={() => setAudioAutoplay(!audioAutoplay)}
+                      className={`w-9 md:w-10 h-5 rounded-full transition-colors relative ${audioAutoplay ? "bg-emerald-500" : "bg-slate-300"}`}
+                    >
+                      <div
+                        className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform ${audioAutoplay ? "translate-x-4 md:translate-x-5" : ""}`}
+                      />
+                    </button>
+                  </label>
+                  <p className="text-[10px] text-emerald-600/60 mt-1">
+                    Auto-play audio when loaded
+                  </p>
+                </div>
+
                 {/* Arabic Font Preview */}
-                <div className="mt-3 p-4 bg-emerald-50/30 border border-emerald-100/50 rounded-2xl text-center overflow-hidden">
-                  <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest mb-2 opacity-50">Preview</p>
-                  <p className={`${arabicFont} text-2xl md:text-3xl text-emerald-950 leading-relaxed`} dir="rtl">
+                <div className="mt-2 p-3 bg-emerald-50/30 border border-emerald-100/50 rounded-xl text-center overflow-hidden">
+                  <p className="text-[9px] text-emerald-600 font-bold uppercase tracking-widest mb-1 opacity-50">
+                    Preview
+                  </p>
+                  <p
+                    className={`${arabicFont} text-xl md:text-2xl text-emerald-950 leading-relaxed`}
+                    dir="rtl"
+                  >
                     بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
                   </p>
                 </div>
-                <label className="block text-emerald-800 font-medium text-sm mb-2">Preferred Arabic Font</label>
-                <select 
-                  value={arabicFont}
-                  onChange={(e) => setArabicFont(e.target.value)}
-                  className="w-full px-3 py-2 bg-emerald-50/50 border border-emerald-100 rounded-xl text-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-sm"
+                <div className="pb-2">
+                  <label className="block text-emerald-800 font-medium text-xs md:text-sm mb-1.5">
+                    Arabic Font
+                  </label>
+                  <select
+                    value={arabicFont}
+                    onChange={(e) => setArabicFont(e.target.value)}
+                    className="w-full px-2 py-1.5 md:py-2 bg-emerald-50/50 border border-emerald-100 rounded-xl text-emerald-900 focus:outline-none focus:ring-1 focus:ring-emerald-500/20 text-xs"
+                  >
+                    <option value="font-arabic">Amiri (Default)</option>
+                    <option value="font-mushaf">Al Mushaf Quran</option>
+                    <option value="font-muhammadi">Muhammadi Quranic</option>
+                    <option value="font-nabi">Nabi</option>
+                  </select>
+                </div>
+
+                <div className="pt-3 border-t border-emerald-50">
+                  <label className="flex items-center gap-2 cursor-pointer mb-3">
+                    <input
+                      type="checkbox"
+                      checked={rangeEnabled}
+                      onChange={(e) => setRangeEnabled(e.target.checked)}
+                      className="w-3.5 h-3.5 rounded border-emerald-300 text-emerald-600 focus:ring-emerald-500"
+                    />
+                    <span className="text-emerald-800 font-medium text-xs md:text-sm">
+                      Restrict Surah Range
+                    </span>
+                  </label>
+                  
+                  {rangeEnabled && surahs.length > 0 && (
+                    <div className="flex flex-col gap-3">
+                      {/* From Surah/Ayat */}
+                      <div className="flex items-end gap-2">
+                        <div className="flex-1 flex flex-col gap-1">
+                          <span className="text-[9px] text-emerald-600 font-bold uppercase">
+                            From Surah
+                          </span>
+                          <SurahSelector
+                            surahs={surahs}
+                            selectedSurah={rangeStart}
+                            onChange={(val) => {
+                              setRangeStart(val);
+                              setRangeStartAyat(1);
+                            }}
+                            label="Choose start"
+                            showAyatCount={false}
+                          />
+                        </div>
+                        <div className="w-15 flex flex-col gap-1">
+                          <span className="text-[9px] text-emerald-600 font-bold uppercase">
+                            Ayat
+                          </span>
+                          <select
+                            value={rangeStartAyat}
+                            onChange={(e) => {
+                              const val = parseInt(e.target.value) || 1;
+                              setRangeStartAyat(val);
+                            }}
+                            className="w-full px-1 py-1.5 bg-emerald-50/50 border border-emerald-100 rounded-xl text-emerald-900 focus:outline-none focus:ring-1 focus:ring-emerald-500/20 text-xs font-medium h-[34px] appearance-none text-center"
+                          >
+                            {Array.from(
+                              { length: surahs.find((s) => s.number === rangeStart)?.numberOfAyahs || 1 },
+                              (_, i) => i + 1
+                            ).map((num) => (
+                              <option key={num} value={num}>
+                                {num}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* To Surah/Ayat */}
+                      <div className="flex items-end gap-2">
+                        <div className="flex-1 flex flex-col gap-1">
+                          <span className="text-[9px] text-emerald-600 font-bold uppercase">
+                            To Surah
+                          </span>
+                          <SurahSelector
+                            surahs={surahs}
+                            selectedSurah={rangeEnd}
+                            onChange={(val) => {
+                              setRangeEnd(val);
+                              const maxAyat = surahs.find((s) => s.number === val)?.numberOfAyahs || 1;
+                              setRangeEndAyat(maxAyat);
+                            }}
+                            label="Choose end"
+                            showAyatCount={false}
+                          />
+                        </div>
+                        <div className="w-[60px] flex flex-col gap-1">
+                          <span className="text-[9px] text-emerald-600 font-bold uppercase">
+                            Ayat
+                          </span>
+                          <select
+                            value={rangeEndAyat}
+                            onChange={(e) => {
+                              const val = parseInt(e.target.value) || 1;
+                              setRangeEndAyat(val);
+                            }}
+                            className="w-full px-1 py-1.5 bg-emerald-50/50 border border-emerald-100 rounded-xl text-emerald-900 focus:outline-none focus:ring-1 focus:ring-emerald-500/20 text-xs font-medium h-[34px] appearance-none text-center"
+                          >
+                            {Array.from(
+                              { length: surahs.find((s) => s.number === rangeEnd)?.numberOfAyahs || 1 },
+                              (_, i) => i + 1
+                            ).map((num) => (
+                              <option key={num} value={num}>
+                                {num}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-2 mt-5">
+                <button
+                  onClick={() => {
+                    resetSettings();
+                    setShowBengali(true);
+                    setShowDetails(false);
+                    setSelectedReciterId(4);
+                    setArabicFont("font-arabic");
+                    setFontSize(32);
+                    setRangeEnabled(false);
+                    setRangeStart(1);
+                    setRangeEnd(114);
+                    setRangeStartAyat(1);
+                    setRangeEndAyat(1);
+                    setAudioAutoplay(false);
+                  }}
+                  className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-all shadow-sm active:scale-95 text-xs md:text-sm"
                 >
-                  <option value="font-arabic">Amiri (Default)</option>
-                  <option value="font-mushaf">Al Mushaf Quran</option>
-                  <option value="font-muhammadi">Muhammadi Quranic</option>
-                  <option value="font-nabi">Nabi</option>
-                </select>
-                
-                
+                  Reset
+                </button>
+                <button
+                  onClick={() => setIsSettingsOpen(false)}
+                  className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all shadow-sm active:scale-95 text-xs md:text-sm"
+                >
+                  Done
+                </button>
               </div>
-
-              <div className="pt-4 border-t border-emerald-50">
-                <label className="flex items-center gap-3 cursor-pointer mb-4">
-                  <input
-                    type="checkbox"
-                    checked={rangeEnabled}
-                    onChange={(e) => setRangeEnabled(e.target.checked)}
-                    className="w-4 h-4 rounded border-emerald-300 text-emerald-600 focus:ring-emerald-500"
-                  />
-                  <span className="text-emerald-800 font-medium text-sm">Restrict Surah Range</span>
-                </label>
-                {rangeEnabled && surahs.length > 0 && (
-                  <div className="grid grid-cols-2 gap-3 md:gap-4">
-                    <div className="flex flex-col gap-2">
-                      <span className="text-[10px] text-emerald-600 font-bold uppercase">Start Surah</span>
-                      <SurahSelector
-                        surahs={surahs}
-                        selectedSurah={rangeStart}
-                        onChange={setRangeStart}
-                        label="Choose start"
-                      />
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <span className="text-[10px] text-emerald-600 font-bold uppercase">End Surah</span>
-                      <SurahSelector
-                        surahs={surahs}
-                        selectedSurah={rangeEnd}
-                        onChange={setRangeEnd}
-                        label="Choose end"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="flex gap-3 mt-8 md:mt-10">
-              <button
-                onClick={() => {
-                  resetSettings();
-                  setShowBengali(true);
-                  setShowDetails(false);
-                  setSelectedReciterId(4);
-                  setArabicFont("font-arabic");
-                  setFontSize(32);
-                  setRangeEnabled(false);
-                  setRangeStart(1);
-                  setRangeEnd(114);
-                }}
-                className="flex-1 py-3 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold rounded-2xl transition-all shadow-lg active:scale-95 text-sm md:text-base"
-              >
-                Reset
-              </button>
-              <button
-                onClick={() => setIsSettingsOpen(false)}
-                className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl transition-all shadow-lg active:scale-95 text-sm md:text-base"
-              >
-                Done
-              </button>
             </div>
           </div>
         </div>
@@ -388,12 +543,8 @@ export default function Home() {
       {/* Header */}
       <header className="w-full max-w-4xl flex items-center justify-between mb-8 md:mb-12">
         <div className="flex items-center gap-3 md:gap-5 group transition-all duration-500">
-          {/* <div className="relative w-12 h-12 md:w-16 md:h-16 flex items-center justify-center">
-            <svg viewBox="0 0 100 100" className="w-full h-full fill-emerald-800 drop-shadow-sm group-hover:fill-emerald-600 transition-colors">
-              <path d="M50 5 L63 25 L85 25 L75 44 L90 63 L70 63 L60 85 L44 75 L25 90 L25 70 L5 60 L25 44 L15 25 L37 25 Z" />
-              <path d="M50 15 L58 30 L78 30 L68 44 L81 58 L63 58 L54 75 L43 66 L30 78 L30 58 L18 52 L32 41 L27 30 L45 30 Z" fill="white" />
-              <circle cx="50" cy="50" r="8" className="fill-emerald-800 group-hover:fill-emerald-600" />
-            </svg>
+          {/* <div className="relative flex items-center justify-center w-12 h-12 md:w-16 md:h-16 rounded-2xl border border-emerald-100 shadow-sm bg-white/50 backdrop-blur-sm overflow-hidden shrink-0">
+            <Image src="/logo.png" alt="nextVerse Logo" fill priority className="object-contain p-2" />
           </div> */}
           <div>
             <h1 className="text-2xl md:text-4xl font-black tracking-tighter text-emerald-950 leading-none selection:bg-islam-gold selection:text-white">
@@ -404,7 +555,7 @@ export default function Home() {
             </p>
           </div>
         </div>
-        <button 
+        <button
           onClick={() => setIsSettingsOpen(true)}
           className="p-2.5 md:p-4 glass-card bg-emerald-900/5 hover:bg-emerald-900/10 rounded-full text-emerald-800 transition-all active:scale-95 border border-emerald-900/10"
         >
@@ -424,41 +575,51 @@ export default function Home() {
               <div className="absolute -inset-4 bg-emerald-500/10 rounded-full blur-2xl animate-pulse" />
             </div>
             <div className="mt-8 md:mt-12 text-emerald-900/40 text-[10px] md:text-sm font-black tracking-[0.4em] uppercase text-center max-w-50 leading-loose">
-              Refining the <br/> Divine Verse
+              Refining the <br /> Divine Verse
             </div>
           </div>
         ) : ayahState.arabic ? (
           <div className="w-full relative group px-2 md:px-0 max-h-[75vh] flex flex-col">
             <div className="bg-white/60 backdrop-blur-xl border border-white/40 rounded-4xl md:rounded-[2.5rem] p-6 md:p-10 shadow-[0_20px_50px_rgba(6,78,59,0.05)] text-center relative overflow-hidden transition-all duration-700 group-hover:shadow-[0_20px_70px_rgba(6,78,59,0.1)] flex flex-col min-h-0">
-              
               <div className="flex items-center justify-between mb-6 pb-4 border-b border-emerald-100/30 shrink-0">
                 {/* Modern Ayah/Surah Label with Reveal Toggle */}
                 <div className="flex items-center gap-1.5 bg-emerald-50/50 border border-emerald-100 p-1 rounded-2xl pr-4">
-                  <div className={`px-3 py-1.5 transition-all duration-500 rounded-xl flex items-center gap-2 ${!tempShowDetails ? "blur-[3px] select-none opacity-40 bg-emerald-100/20" : "blur-0 bg-white shadow-sm"}`}>
-                     <span className="text-[10px] sm:text-xs font-black text-emerald-800 tracking-tighter uppercase whitespace-nowrap">
-                       {currentSurah?.englishName} • {ayahState.surah}:{ayahState.ayah}
-                     </span>
+                  <div
+                    className={`px-3 py-1.5 transition-all duration-500 rounded-xl flex items-center gap-2 ${!tempShowDetails ? "blur-[3px] select-none opacity-40 bg-emerald-100/20" : "blur-0 bg-white shadow-sm"}`}
+                  >
+                    <span className="text-[10px] sm:text-xs font-black text-emerald-800 tracking-tighter uppercase whitespace-nowrap">
+                      {currentSurah?.englishName} • {ayahState.surah}:
+                      {ayahState.ayah}
+                    </span>
                   </div>
-                  <button 
+                  <button
                     onClick={() => setTempShowDetails(!tempShowDetails)}
                     className={`p-1.5 rounded-lg transition-all active:scale-90 ${tempShowDetails ? "text-emerald-600 bg-emerald-100/50" : "text-emerald-400 hover:text-emerald-600"}`}
-                    title={tempShowDetails ? "Hide Ayah Info" : "Reveal Ayah Info"}
+                    title={
+                      tempShowDetails ? "Hide Ayah Info" : "Reveal Ayah Info"
+                    }
                   >
-                    <span className="text-sm leading-none">{tempShowDetails ? "🙈" : "👁️"}</span>
+                    <span className="text-sm bg-transparent leading-none">
+                      {tempShowDetails ? "🙈" : "👁️"}
+                    </span>
                   </button>
                 </div>
 
                 {/* Securely Positioned Font Controls */}
                 <div className="flex items-center gap-2">
-                  <button 
-                    onClick={() => setFontSize(prev => Math.min(prev + 4, 80))}
+                  <button
+                    onClick={() =>
+                      setFontSize((prev) => Math.min(prev + 4, 80))
+                    }
                     className="w-10 h-10 flex items-center justify-center bg-white text-emerald-700 rounded-xl hover:bg-emerald-600 hover:text-white transition-all shadow-sm active:scale-95 border border-emerald-100"
                     title="Increase Font"
                   >
                     <span className="text-sm font-black">A+</span>
                   </button>
-                  <button 
-                    onClick={() => setFontSize(prev => Math.max(prev - 4, 16))}
+                  <button
+                    onClick={() =>
+                      setFontSize((prev) => Math.max(prev - 4, 16))
+                    }
                     className="w-10 h-10 flex items-center justify-center bg-white text-emerald-700 rounded-xl hover:bg-emerald-600 hover:text-white transition-all shadow-sm active:scale-95 border border-emerald-100"
                     title="Decrease Font"
                   >
@@ -469,19 +630,21 @@ export default function Home() {
 
               <div className="overflow-y-auto px-2 md:px-4 custom-scrollbar flex-1 pb-4">
                 <div className="space-y-6 pt-2">
-                  <p 
+                  <p
                     className={`${arabicFont} text-emerald-950 leading-[1.8] md:leading-[2.2]`}
                     style={{ fontSize: `${fontSize}px` }}
                     dir="rtl"
                   >
                     {ayahState.arabic.text}
                   </p>
-                  
+
                   {showBengali && bengaliTranslation && (
                     <div className="pt-6 border-t border-emerald-100/40 mt-6 max-w-3xl mx-auto">
-                      <p 
+                      <p
                         className="bengali-text text-emerald-900/70 font-medium leading-relaxed italic"
-                        style={{ fontSize: `${Math.max(14, fontSize * 0.45)}px` }}
+                        style={{
+                          fontSize: `${Math.max(14, fontSize * 0.45)}px`,
+                        }}
                       >
                         {bengaliTranslation.text}
                       </p>
@@ -500,7 +663,9 @@ export default function Home() {
                         <div className="py-3 text-center">
                           <div className="inline-flex items-center gap-2 text-emerald-600">
                             <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                            <span className="text-xs md:text-sm font-medium">Loading audio...</span>
+                            <span className="text-xs md:text-sm font-medium">
+                              Loading audio...
+                            </span>
                           </div>
                         </div>
                       ) : audioState.error ? (
@@ -515,8 +680,13 @@ export default function Home() {
             </div>
           </div>
         ) : (
-          <div className="text-center group cursor-pointer" onClick={getRandomAyah}>
-            <div className="text-6xl md:text-8xl mb-6 md:mb-8 animate-float opacity-80 group-hover:scale-110 transition-transform duration-500 cursor-pointer select-none">🌙</div>
+          <div
+            className="text-center group cursor-pointer"
+            onClick={getRandomAyah}
+          >
+            <div className="text-6xl md:text-8xl mb-6 md:mb-8 animate-float opacity-80 group-hover:scale-110 transition-transform duration-500 cursor-pointer select-none">
+              🌙
+            </div>
             <p className="text-emerald-900 text-xl md:text-2xl font-semibold opacity-60 group-hover:opacity-100 transition-opacity px-6">
               Tap the moon to reveal a verse
             </p>
@@ -534,7 +704,9 @@ export default function Home() {
           <div className="w-12 h-12 md:w-14 md:h-14 bg-white/80 backdrop-blur rounded-full flex items-center justify-center border border-emerald-100 text-emerald-700 font-bold transition-all group-active:scale-75 shadow-[0_4px_12px_rgba(0,0,0,0.05)]">
             <span className="text-lg md:text-xl">◀</span>
           </div>
-          <span className="text-[8px] md:text-[10px] font-bold text-emerald-800/40 uppercase tracking-tighter">Prev</span>
+          <span className="text-[8px] md:text-[10px] font-bold text-emerald-800/40 uppercase tracking-tighter">
+            Prev
+          </span>
         </button>
 
         <button
@@ -544,9 +716,13 @@ export default function Home() {
         >
           <div className="absolute inset-0 bg-emerald-500 rounded-full blur-xl md:blur-2xl opacity-20 group-hover:opacity-40 transition-opacity" />
           <div className="relative w-20 h-20 md:w-24 md:h-24 bg-emerald-600 rounded-full flex items-center justify-center shadow-[0_10px_30px_rgba(5,150,105,0.4)] border-4 border-white transition-all group-hover:bg-emerald-500 overflow-hidden">
-             <span className="text-3xl md:text-4xl transform group-hover:rotate-12 transition-transform select-none">🎲</span>
+            <span className="text-3xl md:text-4xl transform group-hover:rotate-12 transition-transform select-none">
+              🎲
+            </span>
           </div>
-          <div className="mt-2 text-[9px] md:text-[10px] font-bold text-emerald-800 uppercase tracking-widest text-center">Random</div>
+          <div className="mt-2 text-[9px] md:text-[10px] font-bold text-emerald-800 uppercase tracking-widest text-center">
+            Random
+          </div>
         </button>
 
         <button
@@ -557,7 +733,9 @@ export default function Home() {
           <div className="w-12 h-12 md:w-14 md:h-14 bg-white/80 backdrop-blur rounded-full flex items-center justify-center border border-emerald-100 text-emerald-700 font-bold transition-all group-active:scale-75 shadow-[0_4px_12px_rgba(0,0,0,0.05)]">
             <span className="text-lg md:text-xl">▶</span>
           </div>
-          <span className="text-[8px] md:text-[10px] font-bold text-emerald-800/40 uppercase tracking-tighter">Next</span>
+          <span className="text-[8px] md:text-[10px] font-bold text-emerald-800/40 uppercase tracking-tighter">
+            Next
+          </span>
         </button>
       </div>
 
@@ -578,7 +756,6 @@ export default function Home() {
           ↪
         </button>
       </div> */}
-
     </div>
   );
 }

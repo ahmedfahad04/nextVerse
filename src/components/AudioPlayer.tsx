@@ -8,21 +8,21 @@ interface MinimalAudioPlayerProps {
   verseKey: string;
   reciterId?: number;
   onLoadingChange?: (loading: boolean) => void;
+  autoplay?: boolean;
+  textLoaded?: boolean;
 }
 
-/**
- * Minimalist Audio Player
- * Compact design with play button at bottom center and timeline as bottom border
- */
 export default function MinimalAudioPlayer({
   audioUrl: initialAudioUrl,
   verseKey,
   reciterId = 4,
   onLoadingChange,
+  autoplay = false,
+  textLoaded = true,
 }: MinimalAudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(initialAudioUrl || null);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(true);
   const [currentTime, setCurrentTime] = useState(0);
   const [totalTime, setTotalTime] = useState(0);
   const [isLoading, setIsLoading] = useState(!initialAudioUrl);
@@ -36,7 +36,6 @@ export default function MinimalAudioPlayer({
     setIsPlaying(false);
   }, [initialAudioUrl, verseKey]);
 
-  // Fetch audio URL if not provided directly
   useEffect(() => {
     if (audioUrl) return;
 
@@ -115,6 +114,19 @@ export default function MinimalAudioPlayer({
     }
   };
 
+  const handleCanPlay = () => {
+    setIsLoading(false);
+    if (autoplay && textLoaded && !isPlaying) {
+      audioRef.current?.play().then(() => setIsPlaying(true)).catch((err) => console.error("Autoplay failed:", err));
+    }
+  };
+
+  useEffect(() => {
+    if (autoplay && audioUrl && textLoaded && !isPlaying && audioRef.current && audioRef.current.readyState >= 3) {
+      audioRef.current.play().then(() => setIsPlaying(true)).catch((err) => console.error("Autoplay failed:", err));
+    }
+  }, [autoplay, audioUrl, textLoaded, isPlaying]);
+
   const handleLoadStart = () => {
     setIsLoading(true);
     setError(null);
@@ -158,15 +170,15 @@ export default function MinimalAudioPlayer({
         src={audioUrl || undefined}
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
+        onCanPlay={handleCanPlay}
         onLoadStart={handleLoadStart}
         onEnded={handleEnded}
         onError={handleError}
         preload="metadata"
+        autoPlay={autoplay && textLoaded}
       />
 
-      {/* Minimalist Bottom Bar with Progress */}
       <div className="flex items-center justify-center gap-2 pt-3 pb-2">
-        {/* Play/Pause Button with SVG Icon */}
         <button
           onClick={handlePlayPause}
           disabled={isLoading || !!error}
@@ -194,28 +206,24 @@ export default function MinimalAudioPlayer({
           </svg>
         </button>
 
-        {/* Time Indicators */}
-        <div className="text-xs font-bold text-emerald-700 w-8 text-right">
+        {/* <div className="text-xs font-bold text-emerald-700 w-8 text-right">
           {Math.floor(currentTime)}
           <span className="text-emerald-500/60">/</span>
           {Math.floor(totalTime)}s
-        </div>
+        </div> */}
 
-        {/* Error Message */}
         {error && <span className="text-xs text-red-600 font-medium">{error}</span>}
       </div>
 
-      {/* Progress Bar at Bottom (as border) */}
       <div
         onClick={handleProgressClick}
         className="h-1 md:h-1.5 bg-emerald-100/40 cursor-pointer group hover:bg-emerald-100/70 transition-colors rounded-b-2xl overflow-hidden"
       >
         <div
-          className="h-full bg-gradient-to-r from-emerald-500 to-emerald-600 transition-all rounded-b-2xl"
+          className="h-full bg-linear-to-r from-emerald-500 to-emerald-600 transition-all rounded-b-2xl"
           style={{ width: `${progressPercent}%` }}
         />
       </div>
     </div>
   );
 }
-

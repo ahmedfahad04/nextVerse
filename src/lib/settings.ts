@@ -12,6 +12,9 @@ export interface AppSettings {
   rangeEnabled: boolean;
   rangeStart: number;
   rangeEnd: number;
+  rangeStartAyat: number;
+  rangeEndAyat: number;
+  audioAutoplay: boolean;
 }
 
 const SETTINGS_KEY = "nextverse-settings";
@@ -26,6 +29,9 @@ export const defaultSettings: AppSettings = {
   rangeEnabled: false,
   rangeStart: 1,
   rangeEnd: 114,
+  rangeStartAyat: 1,
+  rangeEndAyat: 1,
+  audioAutoplay: false,
 };
 
 /**
