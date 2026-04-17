@@ -166,20 +166,32 @@ export default function MinimalAudioPlayer({
 
       {/* Minimalist Bottom Bar with Progress */}
       <div className="flex items-center justify-center gap-2 pt-3 pb-2">
-        {/* Play/Pause Button */}
+        {/* Play/Pause Button with SVG Icon */}
         <button
           onClick={handlePlayPause}
           disabled={isLoading || !!error}
-          className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-bold text-white transition-all active:scale-90 disabled:opacity-40 disabled:cursor-not-allowed ${
+          className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-white transition-all active:scale-90 disabled:opacity-40 disabled:cursor-not-allowed ${
             isPlaying
               ? "bg-emerald-600 hover:bg-emerald-700"
               : "bg-emerald-500 hover:bg-emerald-600"
           }`}
           title={isPlaying ? "Pause" : "Play"}
         >
-          <span className="text-sm">
-            {isLoading ? "⏳" : isPlaying ? "⏸" : "▶"}
-          </span>
+          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+            {isLoading ? (
+              <>
+                <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="2" opacity="0.3" />
+                <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="15.7 47.1" strokeLinecap="round" style={{ animation: "spin 1s linear infinite" }} />
+              </>
+            ) : isPlaying ? (
+              <>
+                <rect x="6" y="4" width="4" height="16" fill="currentColor" />
+                <rect x="14" y="4" width="4" height="16" fill="currentColor" />
+              </>
+            ) : (
+              <polygon points="5 3 19 12 5 21" fill="currentColor" />
+            )}
+          </svg>
         </button>
 
         {/* Time Indicators */}

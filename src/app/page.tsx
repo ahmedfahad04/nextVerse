@@ -4,6 +4,8 @@ import { useEffect, useState, useCallback } from "react";
 import { getAyahData, getSurahs, getVerseRecitationByKey, getReciters } from "@/lib/quran-api";
 import { Surah, ArabicAyah, Translation, VerseRecitation, Reciter } from "@/types/quran";
 import MinimalAudioPlayer from "@/components/AudioPlayer";
+import SurahSelector from "@/components/SurahSelector";
+import { loadSettings, saveSettings, resetSettings, cacheSurahData } from "@/lib/settings";
 
 interface AyahState {
   surah: number;
@@ -36,33 +38,48 @@ export default function Home() {
     error: null,
   });
   const [reciters, setReciters] = useState<Reciter[]>([]);
-  const [selectedReciterId, setSelectedReciterId] = useState(4); // Default: Al-Afasy
   
-  // Settings Toggles
-  const [showBengali, setShowBengali] = useState(true);
-  const [showDetails, setShowDetails] = useState(false); // Default setting
-  const [tempShowDetails, setTempShowDetails] = useState(false); // Inline toggle
+  // Load settings from localStorage
+  const settings = loadSettings();
+  const [showBengali, setShowBengali] = useState(settings.showBengali);
+  const [showDetails, setShowDetails] = useState(settings.showDetails);
+  const [tempShowDetails, setTempShowDetails] = useState(settings.showDetails);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-
-  // New settings for custom fonts and sizes
-  const [arabicFont, setArabicFont] = useState("font-arabic"); // default Amiri
-  const [fontSize, setFontSize] = useState(32); // base font size in px
-  // const [bengaliFontSize, setBengaliFontSize] = useState(18);
-
-  const [rangeEnabled, setRangeEnabled] = useState(false);
-  const [rangeStart, setRangeStart] = useState(1);
-  const [rangeEnd, setRangeEnd] = useState(114);
+  const [selectedReciterId, setSelectedReciterId] = useState(settings.selectedReciterId);
+  const [arabicFont, setArabicFont] = useState(settings.arabicFont);
+  const [fontSize, setFontSize] = useState(settings.fontSize);
+  const [rangeEnabled, setRangeEnabled] = useState(settings.rangeEnabled);
+  const [rangeStart, setRangeStart] = useState(settings.rangeStart);
+  const [rangeEnd, setRangeEnd] = useState(settings.rangeEnd);
+  
   const [history, setHistory] = useState<Array<{ surah: number; ayah: number }>>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
 
   useEffect(() => {
-    getSurahs().then(setSurahs).catch(console.error);
+    getSurahs().then((data) => {
+      setSurahs(data);
+      cacheSurahData(data); // Cache surahs to localStorage
+    }).catch(console.error);
     getReciters()
       .then((reciters) => {
         setReciters(reciters);
       })
       .catch(console.error);
   }, []);
+
+  // Save settings to localStorage whenever they change
+  useEffect(() => {
+    saveSettings({
+      showBengali,
+      showDetails,
+      arabicFont,
+      fontSize,
+      selectedReciterId,
+      rangeEnabled,
+      rangeStart,
+      rangeEnd,
+    });
+  }, [showBengali, showDetails, arabicFont, fontSize, selectedReciterId, rangeEnabled, rangeStart, rangeEnd]);
 
   // Sync tempShowDetails with showDetails when ayah changes
   useEffect(() => {
@@ -269,11 +286,15 @@ export default function Home() {
                   onChange={(e) => handleReciterChange(parseInt(e.target.value))}
                   className="w-full px-3 py-2 md:py-2.5 bg-emerald-50/50 border border-emerald-100 rounded-xl text-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-sm font-medium"
                 >
-                  {reciters.map((reciter) => (
-                    <option key={reciter.id} value={reciter.id}>
-                      {reciter.englishName}
-                    </option>
-                  ))}
+                  {reciters.length === 0 ? (
+                    <option value={selectedReciterId}>Loading reciters...</option>
+                  ) : (
+                    reciters.map((reciter) => (
+                      <option key={reciter.id} value={reciter.id}>
+                        {reciter.englishName}
+                      </option>
+                    ))
+                  )}
                 </select>
                 <p className="text-xs text-emerald-600/60 mt-2">Select your preferred reciter for verse audio</p>
               </div>
@@ -302,7 +323,7 @@ export default function Home() {
               </div>
 
               <div className="pt-4 border-t border-emerald-50">
-                <label className="flex items-center gap-3 cursor-pointer mb-3">
+                <label className="flex items-center gap-3 cursor-pointer mb-4">
                   <input
                     type="checkbox"
                     checked={rangeEnabled}
@@ -311,52 +332,24 @@ export default function Home() {
                   />
                   <span className="text-emerald-800 font-medium text-sm">Restrict Surah Range</span>
                 </label>
-                {rangeEnabled && (
+                {rangeEnabled && surahs.length > 0 && (
                   <div className="grid grid-cols-2 gap-3 md:gap-4">
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[10px] text-emerald-600 font-bold uppercase">Start</span>
-                      <input
-                        type="text"
-                        min={1}
-                        max={114}
-                        value={rangeStart}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          if (val === "") {
-                            setRangeStart(0 as any); // allow clear
-                            return;
-                          }
-                          const num = Math.min(Math.max(1, parseInt(val) || 1), 114);
-                          setRangeStart(num);
-                        }}
-                        onBlur={() => {
-                          if (!rangeStart) setRangeStart(1);
-                          if (rangeStart > rangeEnd) setRangeStart(rangeEnd);
-                        }}
-                        className="w-full px-3 py-2 bg-emerald-50/50 border border-emerald-100 rounded-xl text-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-sm"
+                    <div className="flex flex-col gap-2">
+                      <span className="text-[10px] text-emerald-600 font-bold uppercase">Start Surah</span>
+                      <SurahSelector
+                        surahs={surahs}
+                        selectedSurah={rangeStart}
+                        onChange={setRangeStart}
+                        label="Choose start"
                       />
                     </div>
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[10px] text-emerald-600 font-bold uppercase">End</span>
-                      <input
-                        type="text"
-                        min={1}
-                        max={114}
-                        value={rangeEnd}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          if (val === "") {
-                            setRangeEnd(0 as any); // allow clear
-                            return;
-                          }
-                          const num = Math.min(Math.max(1, parseInt(val) || 1), 114);
-                          setRangeEnd(num);
-                        }}
-                        onBlur={() => {
-                          if (!rangeEnd) setRangeEnd(114);
-                          if (rangeEnd < rangeStart) setRangeEnd(rangeStart);
-                        }}
-                        className="w-full px-3 py-2 bg-emerald-50/50 border border-emerald-100 rounded-xl text-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-sm"
+                    <div className="flex flex-col gap-2">
+                      <span className="text-[10px] text-emerald-600 font-bold uppercase">End Surah</span>
+                      <SurahSelector
+                        surahs={surahs}
+                        selectedSurah={rangeEnd}
+                        onChange={setRangeEnd}
+                        label="Choose end"
                       />
                     </div>
                   </div>
@@ -364,12 +357,30 @@ export default function Home() {
               </div>
             </div>
 
-            <button
-              onClick={() => setIsSettingsOpen(false)}
-              className="w-full mt-8 md:mt-10 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl transition-all shadow-lg active:scale-95 text-sm md:text-base"
-            >
-              Done
-            </button>
+            <div className="flex gap-3 mt-8 md:mt-10">
+              <button
+                onClick={() => {
+                  resetSettings();
+                  setShowBengali(true);
+                  setShowDetails(false);
+                  setSelectedReciterId(4);
+                  setArabicFont("font-arabic");
+                  setFontSize(32);
+                  setRangeEnabled(false);
+                  setRangeStart(1);
+                  setRangeEnd(114);
+                }}
+                className="flex-1 py-3 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold rounded-2xl transition-all shadow-lg active:scale-95 text-sm md:text-base"
+              >
+                Reset
+              </button>
+              <button
+                onClick={() => setIsSettingsOpen(false)}
+                className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl transition-all shadow-lg active:scale-95 text-sm md:text-base"
+              >
+                Done
+              </button>
+            </div>
           </div>
         </div>
       )}

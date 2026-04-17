@@ -74,7 +74,7 @@ export async function getReciters(): Promise<Reciter[]> {
     return (data.recitations || []).map((reciter: any) => ({
       id: reciter.id,
       name: reciter.name,
-      englishName: reciter.english_name,
+      englishName: reciter.english_name || reciter.name || `Reciter ${reciter.id}`,
       format: reciter.format || "mp3",
       style: reciter.style,
     }));
